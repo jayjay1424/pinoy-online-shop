@@ -1014,16 +1014,16 @@ export const MaterialsFactory = {
       color: new THREE.Color(colorHex),
       map: pinaSedaTexture,
       bumpMap: pinaSedaTexture,
-      bumpScale: 0.012,
-      roughness: 0.72, // Matte woven natural cloth roughness — strictly non-plastic & non-glossy
+      bumpScale: 0.008,
+      roughness: 0.74, // Strictly matte woven natural cloth — non-plastic & non-glossy
       metalness: 0.0,  // Pure organic pineapple & silk fibers, zero metalness
-      transmission: 0.22, // Subtle natural cloth translucency showing the inner Camisa de Chino
-      thickness: 0.38,
-      ior: 1.33,
+      transmission: 0.26, // Subtle natural cloth translucency revealing the inner Camisa de Chino
+      thickness: 0.22,
+      ior: 1.46,       // Natural cellulose / mulberry silk refractive index
       side: THREE.DoubleSide,
-      sheen: 0.50, // Subtle organic silk-thread light scatter
-      sheenColor: new THREE.Color('#FFF9E8'),
-      sheenRoughness: 0.40,
+      sheen: 0.58,     // Subtle organic silk-thread light scatter
+      sheenColor: new THREE.Color('#FFF8E6'),
+      sheenRoughness: 0.45,
     });
   },
 
@@ -1033,9 +1033,9 @@ export const MaterialsFactory = {
       color: new THREE.Color(threadHex),
       map: caladoColorMap,
       normalMap: caladoNormalMap,
-      normalScale: new THREE.Vector2(0.85, 0.85), // Subtle raised thread depth
-      roughness: 0.48, // Satin silk embroidery thread
-      metalness: 0.06, // Natural silk sheen without synthetic metallic glow
+      normalScale: new THREE.Vector2(1.1, 1.1), // Subtle raised thread depth
+      roughness: 0.44, // Satin silk embroidery thread
+      metalness: 0.02, // Natural silk sheen without synthetic metallic glow
       side: THREE.DoubleSide,
     });
   },
@@ -1044,14 +1044,14 @@ export const MaterialsFactory = {
   createBarongPecheraPhotoMaterial() {
     if (!MaterialsFactory._barongTex) {
       const loader = new THREE.TextureLoader();
-      MaterialsFactory._barongTex = loader.load('/textures/barong_source.png');
+      MaterialsFactory._barongTex = loader.load('/textures/barong_tagalog.png');
       MaterialsFactory._barongTex.colorSpace = THREE.SRGBColorSpace;
       MaterialsFactory._barongTex.anisotropy = 16;
     }
     return new THREE.MeshStandardMaterial({
       map: MaterialsFactory._barongTex,
       roughness: 0.52,
-      metalness: 0.05,
+      metalness: 0.02,
       side: THREE.DoubleSide,
     });
   },

@@ -323,7 +323,7 @@ export const PRODUCTS = [
     fairTradePercentage: 48,
     has3DModel: true,
     modelType: 'dalisay',
-    image: '/textures/barong_source.png',
+    image: '/textures/barong_tagalog.png',
     description: 'Classic bespoke formal Barong Tagalog tailored from pure hand-scraped Piña-Seda with Lumban Calado open-work needlework and Mother-of-Pearl buttons.',
     specs: [
       { label: 'Silweta / Silhouette', value: 'Masculine tailored straight cut with dual reinforced side vents (bolas)' },
@@ -336,11 +336,11 @@ export const PRODUCTS = [
       { id: 'pina-pure', name: 'Pure Handloom Piña Ivory', hex: '#FAF8F2', fabricHex: '#FAF8F2', embroideryHex: '#D4AF37', buttonHex: '#FFFDF5' }
     ],
     cameraPresets: [
-      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.25, 3.1], target: [0, 0.70, 0] },
-      { id: 'pechera', label: 'Calado Pechera', pos: [0, 1.15, 1.35], target: [0, 0.98, 0] },
-      { id: 'collar', label: 'Mandarin Collar', pos: [0, 1.48, 1.10], target: [0, 1.34, 0] },
-      { id: 'cuff', label: 'French Cuff & MOP', pos: [0.75, 0.65, 1.25], target: [0.55, 0.50, 0] },
-      { id: 'vent', label: 'Side Vent & Hem', pos: [0.70, 0.35, 1.40], target: [0.35, 0.20, 0] },
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.15, 2.6], target: [0, 0.88, 0] },
+      { id: 'pechera', label: 'Calado Pechera', pos: [0, 1.10, 1.25], target: [0, 1.05, 0] },
+      { id: 'collar', label: 'Mandarin Collar', pos: [0, 1.45, 0.95], target: [0, 1.37, 0] },
+      { id: 'cuff', label: 'French Cuff & MOP', pos: [0.68, 0.58, 1.05], target: [0.48, 0.46, 0] },
+      { id: 'vent', label: 'Side Vent & Hem', pos: [0.72, 0.60, 1.10], target: [0.50, 0.50, 0] },
     ]
   },
   {
@@ -359,7 +359,7 @@ export const PRODUCTS = [
     fairTradePercentage: 48,
     has3DModel: true,
     modelType: 'barong-men',
-    image: '/textures/barong_source.png',
+    image: '/textures/barong_tagalog.png',
     description: 'An authentic Philippine formal masterpiece tailored for gentlemen. Woven from gossamer-sheer handloom Piña-Seda (red Spanish pineapple fiber and mulberry silk), featuring the iconic U-shaped Lumban Calado chest Pechera embroidery shield, architectural Mandarin standing collar, iridescent Palawan Mother-of-Pearl (Madreperla) buttons, and dual side vents (bolas) for an impeccable tailored drape over formal trousers.',
     specs: [
       { label: 'Silweta / Silhouette', value: 'Masculine tailored straight cut with dual reinforced side vents (bolas)' },
@@ -400,11 +400,11 @@ export const PRODUCTS = [
       },
     ],
     cameraPresets: [
-      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.25, 3.1], target: [0, 0.70, 0] },
-      { id: 'pechera', label: 'Calado Pechera', pos: [0, 1.15, 1.35], target: [0, 0.98, 0] },
-      { id: 'collar', label: 'Mandarin Collar', pos: [0, 1.48, 1.10], target: [0, 1.34, 0] },
-      { id: 'cuff', label: 'French Cuff & MOP', pos: [0.75, 0.65, 1.25], target: [0.55, 0.50, 0] },
-      { id: 'vent', label: 'Side Vent & Hem', pos: [0.70, 0.35, 1.40], target: [0.35, 0.20, 0] },
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.15, 2.6], target: [0, 0.88, 0] },
+      { id: 'pechera', label: 'Calado Pechera', pos: [0, 1.10, 1.25], target: [0, 1.05, 0] },
+      { id: 'collar', label: 'Mandarin Collar', pos: [0, 1.45, 0.95], target: [0, 1.37, 0] },
+      { id: 'cuff', label: 'French Cuff & MOP', pos: [0.68, 0.58, 1.05], target: [0.48, 0.46, 0] },
+      { id: 'vent', label: 'Side Vent & Hem', pos: [0.72, 0.60, 1.10], target: [0.50, 0.50, 0] },
     ],
   },
   {
