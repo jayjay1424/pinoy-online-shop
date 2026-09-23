@@ -1,4 +1,4 @@
-import { hashPassword, comparePassword, generateToken, verifyToken } from '../api/lib/security.js';
+import { hashPassword, comparePassword, generateToken, verifyToken } from '../api/_lib/security.js';
 import registerHandler from '../api/auth/register.js';
 import loginHandler from '../api/auth/login.js';
 import ordersHandler from '../api/orders.js';

@@ -178,6 +178,13 @@ export function Stage3D({
         hex: matSafe.hex || '#24140E',
         hornHex: matSafe.hornHex || '#120D0A',
       });
+    } else {
+      sm.loadModel('bayong', {
+        leafHex: matSafe.hex || '#D8B781',
+        leatherHex: matSafe.leatherHex || '#8C5A3C',
+        brassHex: matSafe.brassHex || '#C4975D',
+        monogramText: monoText || 'JR',
+      });
     }
   };
 
@@ -211,6 +218,8 @@ export function Stage3D({
       sm.updateMaterials(mat.hex);
     } else if (modelType === 'vault') {
       sm.updateMaterials(mat.hex, mat.hornHex);
+    } else {
+      sm.updateMaterials(mat.hex, mat.leatherHex || '#8C5A3C', mat.brassHex || '#C4975D');
     }
   };
 

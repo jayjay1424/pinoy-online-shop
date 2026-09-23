@@ -15,6 +15,7 @@ import { ConciergeModal } from './components/ConciergeModal';
 import { AuthModal } from './components/AuthModal';
 import { AccountModal } from './components/AccountModal';
 import { CuratorStudioPage } from './pages/CuratorStudioPage';
+import { normalizeProduct } from './utils/productUtils';
 import { useAuth } from './context/AuthContext';
 import { sound } from './utils/sound';
 
@@ -85,12 +86,14 @@ export function App() {
       const stored = localStorage.getItem('likha_catalog_items');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(normalizeProduct);
+        }
       }
     } catch (e) {
       console.warn('Failed to parse catalog from localStorage', e);
     }
-    return PRODUCTS;
+    return PRODUCTS.map(normalizeProduct);
   });
 
   const [activeProduct, setActiveProduct] = useState(() => {
@@ -98,10 +101,12 @@ export function App() {
       const stored = localStorage.getItem('likha_catalog_items');
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return normalizeProduct(parsed[0]);
+        }
       }
     } catch (e) {}
-    return PRODUCTS[0];
+    return normalizeProduct(PRODUCTS[0]);
   });
 
   const [selectedMaterial, setSelectedMaterial] = useState(
@@ -129,10 +134,12 @@ export function App() {
     fetch('/api/products')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data && data.success && Array.isArray(data.products) && data.products.length > 0) {
-          setProducts(data.products);
+        const prods = data?.products || data?.data;
+        if (data && data.success && Array.isArray(prods) && prods.length > 0) {
+          const normalizedList = prods.map(normalizeProduct);
+          setProducts(normalizedList);
           try {
-            localStorage.setItem('likha_catalog_items', JSON.stringify(data.products));
+            localStorage.setItem('likha_catalog_items', JSON.stringify(normalizedList));
           } catch (e) {}
         }
       })
@@ -198,47 +205,67 @@ export function App() {
 
   // Admin CRUD Handlers
   const handleCreateProduct = async (newProd) => {
+    const normalized = normalizeProduct(newProd);
     setProducts((prev) => {
-      const updated = [newProd, ...prev];
+      const updated = [normalized, ...prev.filter((p) => p.id !== normalized.id)];
       try {
         localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) {
+        console.warn('localStorage quota warning:', e);
+      }
       return updated;
     });
 
     try {
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProd),
+        body: JSON.stringify(normalized),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.product) {
+          const finalProd = normalizeProduct(data.product);
+          setProducts((prev) => prev.map((p) => (p.id === finalProd.id ? finalProd : p)));
+        }
+      }
     } catch (e) {
       console.warn('API POST failed, saved to local storage cache:', e);
     }
   };
 
   const handleUpdateProduct = async (updatedProd) => {
+    const normalized = normalizeProduct(updatedProd);
     setProducts((prev) => {
-      const updated = prev.map((p) => (p.id === updatedProd.id ? updatedProd : p));
+      const updated = prev.map((p) => (p.id === normalized.id ? normalized : p));
       try {
         localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) {
+        console.warn('localStorage quota warning:', e);
+      }
       return updated;
     });
 
-    if (activeProduct && activeProduct.id === updatedProd.id) {
-      setActiveProduct(updatedProd);
-      if (updatedProd.materials && updatedProd.materials.length > 0) {
-        setSelectedMaterial(updatedProd.materials[0]);
+    if (activeProduct && activeProduct.id === normalized.id) {
+      setActiveProduct(normalized);
+      if (normalized.materials && normalized.materials.length > 0) {
+        setSelectedMaterial(normalized.materials[0]);
       }
     }
 
     try {
-      await fetch('/api/products', {
+      const res = await fetch('/api/products', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedProd),
+        body: JSON.stringify(normalized),
       });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.product) {
+          const finalProd = normalizeProduct(data.product);
+          setProducts((prev) => prev.map((p) => (p.id === finalProd.id ? finalProd : p)));
+        }
+      }
     } catch (e) {
       console.warn('API PUT failed, saved to local storage cache:', e);
     }

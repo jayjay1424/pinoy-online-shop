@@ -1,4 +1,4 @@
-import { initDatabase, query } from '../api/lib/db.js';
+import { initDatabase, query } from '../api/_lib/db.js';
 
 async function main() {
   console.log('--- Likha Atelier Database Initializer ---');

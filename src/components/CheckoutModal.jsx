@@ -33,6 +33,7 @@ export function CheckoutModal({
   const [selectedPaymode, setSelectedPaymode] = useState('gcash');
   const [useBaybayin, setUseBaybayin] = useState(false);
   const [showCertificateView, setShowCertificateView] = useState(false);
+  const [confirmedOrder, setConfirmedOrder] = useState(null);
 
   const [clientInfo, setClientInfo] = useState({
     name: currentUser?.name || 'Sofia Santos',
@@ -54,7 +55,34 @@ export function CheckoutModal({
     }
   }, [currentUser]);
 
-  const [confirmedOrder, setConfirmedOrder] = useState(null);
+  // Reset checkout wizard state whenever modal opens so customer can check out again
+  useEffect(() => {
+    if (isOpen) {
+      setStep('details');
+      setConfirmedOrder(null);
+      setShowCertificateView(false);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    sound.playWoodThud();
+    setStep('details');
+    setConfirmedOrder(null);
+    setShowCertificateView(false);
+    onClose();
+  };
+
+  // Keyboard shortcut: close with Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   const rateInfo = CURRENCY_RATES[activeCurrency] || CURRENCY_RATES.PHP;
   const subtotal = items.reduce((acc, item) => acc + item.price, 0);
@@ -159,7 +187,14 @@ export function CheckoutModal({
   const isQRPaymode = ['gcash', 'maya', 'qrph'].includes(selectedPaymode);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#24140E]/60 backdrop-blur-md flex items-center justify-center p-4 select-none animate-fadeIn">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+      className="fixed inset-0 z-50 overflow-y-auto bg-[#24140E]/60 backdrop-blur-md flex items-center justify-center p-4 select-none animate-fadeIn"
+    >
       <div className="relative w-full max-w-2xl bg-[#FAF8F5] rounded-3xl border border-[#5C3A21]/20 shadow-warm-lg overflow-hidden">
         
         {/* Modal Header */}
@@ -193,10 +228,7 @@ export function CheckoutModal({
           </div>
 
           <button
-            onClick={() => {
-              sound.playWoodThud();
-              onClose();
-            }}
+            onClick={handleClose}
             className="p-2 rounded-full text-[#6E5D53] hover:text-[#24140E] hover:bg-[#F2ECE4] transition-all"
             aria-label="Close"
           >
@@ -535,10 +567,7 @@ export function CheckoutModal({
                   </button>
 
                   <button
-                    onClick={() => {
-                      sound.playBrassClick();
-                      onClose();
-                    }}
+                    onClick={handleClose}
                     className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#5C3A21] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#432916] transition-all shadow-md"
                   >
                     Return to Atelier

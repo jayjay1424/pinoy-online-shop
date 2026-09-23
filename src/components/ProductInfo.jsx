@@ -19,7 +19,8 @@ export function ProductInfo({
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const rateInfo = CURRENCY_RATES[activeCurrency] || CURRENCY_RATES.PHP;
-  const convertedPrice = Math.round(product.pricePHP * rateInfo.rate);
+  const rawPrice = Number(product.pricePHP ?? product.price_php ?? (product.price && product.price.PHP) ?? 45000);
+  const convertedPrice = Math.round(rawPrice * rateInfo.rate);
   const formattedPrice = `${rateInfo.symbol} ${convertedPrice.toLocaleString()}`;
 
   // 12-month 0% installment calculation

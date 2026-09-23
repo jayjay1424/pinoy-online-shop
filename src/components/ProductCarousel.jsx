@@ -113,7 +113,8 @@ export function ProductCarousel({
       >
         {threeProducts.map((p) => {
           const isActive = p.id === activeProductId;
-          const convertedPrice = Math.round(p.pricePHP * rateInfo.rate);
+          const rawPrice = Number(p.pricePHP ?? p.price_php ?? (p.price && p.price.PHP) ?? 45000);
+          const convertedPrice = Math.round(rawPrice * rateInfo.rate);
 
           return (
             <button

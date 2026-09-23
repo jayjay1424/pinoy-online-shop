@@ -57,7 +57,8 @@ export function CatalogGrid({
       {/* 9-Product Luxury Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {filteredProducts.map((p) => {
-          const convertedPrice = Math.round(p.pricePHP * rateInfo.rate);
+          const rawPrice = Number(p.pricePHP ?? p.price_php ?? (p.price && p.price.PHP) ?? 45000);
+          const convertedPrice = Math.round(rawPrice * rateInfo.rate);
 
           return (
             <div

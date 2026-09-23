@@ -34,6 +34,8 @@ import {
 } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
+import { optimizeImage } from '../utils/imageOptimizer';
+import { normalizeProduct } from '../utils/productUtils';
 
 const MASTER_PIN = 'LIKHA2026';
 const MAX_ATTEMPTS = 5;
@@ -276,7 +278,8 @@ export function CuratorStudioPage({
   };
 
   // Image Upload handler (PNG/JPG/WebP)
-  const handleImageFileChange = (e) => {
+  // Image Upload handler (PNG/JPG/WebP) with automatic client-side compression
+  const handleImageFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -285,18 +288,20 @@ export function CuratorStudioPage({
       return;
     }
 
-    if (file.size > 8 * 1024 * 1024) {
-      alert('Image file size exceeds 8MB. Please choose an optimized web image.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const base64Data = uploadEvent.target.result;
-      setFormData((prev) => ({ ...prev, image: base64Data }));
+    try {
+      // Automatically optimize to crisp HD dimensions (max 1200px) & WebP/JPEG compression
+      const optimizedBase64 = await optimizeImage(file, 1200, 1200, 0.82);
+      setFormData((prev) => ({ ...prev, image: optimizedBase64 }));
       sound.playBrassClick();
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.warn('Image optimization fallback:', err);
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        setFormData((prev) => ({ ...prev, image: uploadEvent.target.result }));
+        sound.playBrassClick();
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // 3D GLB upload handler
@@ -330,7 +335,7 @@ export function CuratorStudioPage({
     sound.playBrassClick();
 
     const pricePHP = parseFloat(formData.pricePHP) || 45000;
-    const productPayload = {
+    const rawPayload = {
       id: editingId || `likha-${Date.now()}-${formData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20)}`,
       name: formData.name.trim(),
       subtitle: formData.subtitle.trim(),
@@ -341,10 +346,8 @@ export function CuratorStudioPage({
         PHP: pricePHP,
         USD: Math.round(pricePHP / CURRENCY_RATES.USD.rate),
         EUR: Math.round(pricePHP / CURRENCY_RATES.EUR.rate),
-        GBP: Math.round(pricePHP / CURRENCY_RATES.GBP.rate),
+        GBP: Math.round(pricePHP / (CURRENCY_RATES.GBP?.rate || 71.5)),
         JPY: Math.round(pricePHP / CURRENCY_RATES.JPY.rate),
-        SGD: Math.round(pricePHP / CURRENCY_RATES.SGD.rate),
-        CHF: Math.round(pricePHP / CURRENCY_RATES.CHF.rate),
       },
       edition: formData.edition.trim(),
       batchRemaining: parseInt(formData.batchRemaining, 10) || 0,
@@ -363,17 +366,25 @@ export function CuratorStudioPage({
       materials: formData.materials.filter((m) => m.name && m.hex),
     };
 
-    if (editingId) {
-      await onUpdateProduct(productPayload);
-      setFeedbackMsg(`✓ Masterwork "${productPayload.name}" updated successfully.`);
-    } else {
-      await onCreateProduct(productPayload);
-      setFeedbackMsg(`✓ New Masterwork "${productPayload.name}" commissioned to live catalog.`);
-    }
+    const productPayload = normalizeProduct(rawPayload);
 
-    sound.playSuccessChime();
-    setIsSubmitting(false);
-    setActiveTab('inventory');
+    try {
+      if (editingId) {
+        await onUpdateProduct(productPayload);
+        setFeedbackMsg(`✓ Masterwork "${productPayload.name}" updated successfully.`);
+      } else {
+        await onCreateProduct(productPayload);
+        setFeedbackMsg(`✓ New Masterwork "${productPayload.name}" commissioned to live catalog.`);
+      }
+
+      sound.playSuccessChime();
+      setActiveTab('inventory');
+    } catch (err) {
+      console.error('Failed to commission/update piece:', err);
+      alert('Notice: Could not save to remote server, but piece was cached locally.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Specs Rows handlers
