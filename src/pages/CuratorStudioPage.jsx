@@ -1485,3 +1485,4 @@ export function CuratorStudioPage({
     </div>
   );
 }
+
