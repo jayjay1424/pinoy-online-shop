@@ -103,7 +103,7 @@ export function ProductInfo({
       </p>
 
       {/* Material & Finish Selector */}
-      {product.materials && product.materials.length > 0 && (
+      {product.materials && product.materials.length > 1 && selectedMaterial && (
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs uppercase tracking-wider text-[#24140E] font-semibold">
@@ -113,7 +113,7 @@ export function ProductInfo({
 
           <div className="flex items-center gap-3">
             {product.materials.map((mat) => {
-              const isSelected = selectedMaterial.id === mat.id;
+              const isSelected = selectedMaterial?.id === mat.id;
               return (
                 <button
                   key={mat.id}

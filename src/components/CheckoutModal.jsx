@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   CheckCircle,
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
+import { useAuth } from '../context/AuthContext';
 
 export function CheckoutModal({
   isOpen,
@@ -25,19 +26,33 @@ export function CheckoutModal({
   packagingOptions,
   activeCurrency,
   onOrderCompleted,
+  onOpenAuth,
 }) {
+  const { currentUser, isAuthenticated, recordOrder } = useAuth();
   const [step, setStep] = useState('details'); // 'details' | 'paymode' | 'authorizing' | 'success'
   const [selectedPaymode, setSelectedPaymode] = useState('gcash');
   const [useBaybayin, setUseBaybayin] = useState(false);
   const [showCertificateView, setShowCertificateView] = useState(false);
 
   const [clientInfo, setClientInfo] = useState({
-    name: 'Sofia Santos',
-    email: 'sofia.santos@atelier-collector.ph',
-    phone: '+63 917 888 2026',
-    address: 'Forbes Park, Makati City, Metro Manila',
+    name: currentUser?.name || 'Sofia Santos',
+    email: currentUser?.email || 'sofia.santos@atelier-collector.ph',
+    phone: currentUser?.phone || '+63 917 888 2026',
+    address: currentUser?.address || 'Forbes Park, Makati City, Metro Manila',
     notes: 'Please coordinate with residence concierge upon arrival.',
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setClientInfo((prev) => ({
+        ...prev,
+        name: currentUser.name || prev.name,
+        email: currentUser.email || prev.email,
+        phone: currentUser.phone || prev.phone,
+        address: currentUser.address || (currentUser.savedAddresses?.[0]?.street ? `${currentUser.savedAddresses[0].street}, ${currentUser.savedAddresses[0].city}` : prev.address),
+      }));
+    }
+  }, [currentUser]);
 
   const [confirmedOrder, setConfirmedOrder] = useState(null);
 
@@ -99,6 +114,12 @@ export function CheckoutModal({
   ];
 
   const handleSimulatePayment = () => {
+    if (!isAuthenticated) {
+      sound.playBrassClick();
+      if (onOpenAuth) onOpenAuth('Please sign in or register before authorizing payment.');
+      return;
+    }
+
     sound.playBrassClick();
     setStep('authorizing');
 
@@ -125,6 +146,7 @@ export function CheckoutModal({
 
       setConfirmedOrder(orderData);
       setStep('success');
+      if (recordOrder) recordOrder(orderData);
       onOrderCompleted(orderData);
     }, 1800);
   };
@@ -181,6 +203,27 @@ export function CheckoutModal({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Guest Patron Notice */}
+        {!isAuthenticated && step !== 'success' && (
+          <div className="bg-amber-50 border-b border-amber-300 px-5 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950 animate-fadeIn">
+            <div className="flex items-center gap-2.5">
+              <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+              <span>
+                <strong>Patron Account Required:</strong> Please sign in or register before ordering or paying.
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                if (onOpenAuth) onOpenAuth('Please sign in or register before ordering or paying.');
+              }}
+              className="px-3.5 py-1.5 rounded-full bg-[#5C3A21] text-white text-xs font-semibold shrink-0 hover:bg-[#432916] transition-all shadow-xs"
+            >
+              Sign In / Register
+            </button>
+          </div>
+        )}
 
         {/* Step 1: Client Shipping & Delivery Coordinates */}
         {step === 'details' && (
@@ -248,11 +291,15 @@ export function CheckoutModal({
 
             <div className="pt-4 flex items-center justify-between">
               <span className="text-[11px] text-[#6E5D53]">
-                Protected under RA 10173 (Philippine Data Privacy Act)
+                Encrypted Atelier Protocol • White-Glove Security
               </span>
               <button
                 onClick={() => {
                   sound.playBrassClick();
+                  if (!isAuthenticated) {
+                    if (onOpenAuth) onOpenAuth('Please sign in or register before proceeding to payment.');
+                    return;
+                  }
                   setStep('paymode');
                 }}
                 className="px-6 py-2.5 rounded-full bg-[#5C3A21] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#432916] transition-all shadow-md"

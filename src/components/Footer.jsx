@@ -68,17 +68,10 @@ export function Footer() {
 
       </div>
 
-      {/* Bottom Legal & Vercel Production Note */}
+      {/* Bottom Legal Copyright */}
       <div className="max-w-7xl mx-auto pt-8 border-t border-[#5C3A21]/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-[#8C5A3C]">
         <div className="flex items-center gap-4">
           <span>© 2026 Likha Atelier Genève. All rights reserved.</span>
-          <span>•</span>
-          <span>Protected under RA 10173 & IP Code of the Philippines</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-          <span className="font-mono text-[10px] text-[#5C3A21]">100% Vercel Edge Production Ready</span>
         </div>
       </div>
     </footer>

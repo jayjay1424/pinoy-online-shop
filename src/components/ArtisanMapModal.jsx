@@ -35,7 +35,7 @@ export function ArtisanMapModal({ isOpen, onClose }) {
       craft: "T'nalak Sacred Abaca Dreamweaving",
       guild: "T'boli Sacred Dreamweavers Collective",
       master: 'Bo-i Maria (Living Treasure Lineage)',
-      products: "T'nalak Minaudière Evening Clutch",
+      products: "Sacred T'nalak Master Tapestries",
       description: "T'boli women receive sacred textile patterns directly in dreams from Fu Dalu, the spirit of abaca. The fibers are hand-stripped, tie-dyed using boiled river mud and forest bark roots, and loomed over months."
     },
     {
@@ -55,7 +55,7 @@ export function ArtisanMapModal({ isOpen, onClose }) {
       craft: 'Yakan Geometric Backstrap Weaving',
       guild: 'Yakan Indigenous Weavers Village',
       master: 'Hadja Sitti (Master Weaver)',
-      products: 'Yakan Seputangan Royal Stole',
+      products: 'Yakan Indigenous Tapestries & Textiles',
       description: 'Using traditional backstrap wooden looms tied to the artisan’s waist, Yakan women weave kaleidoscopic python-eye and diamond patterns using 100% natural botanical plant dyes.'
     }
   ];

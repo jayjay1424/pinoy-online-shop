@@ -12,11 +12,17 @@ import { CheckoutModal } from './components/CheckoutModal';
 import { UnboxingModal } from './components/UnboxingModal';
 import { ArtisanMapModal } from './components/ArtisanMapModal';
 import { ConciergeModal } from './components/ConciergeModal';
+import { AuthModal } from './components/AuthModal';
+import { AccountModal } from './components/AccountModal';
+import { useAuth } from './context/AuthContext';
 import { sound } from './utils/sound';
 
 export function App() {
+  const { isAuthenticated } = useAuth();
   const [activeProduct, setActiveProduct] = useState(PRODUCTS[0]); // Default: Bayong Royale
-  const [selectedMaterial, setSelectedMaterial] = useState(PRODUCTS[0].materials[0]);
+  const [selectedMaterial, setSelectedMaterial] = useState(
+    PRODUCTS[0].materials && PRODUCTS[0].materials.length > 0 ? PRODUCTS[0].materials[0] : null
+  );
   const [monogram, setMonogram] = useState('JR');
   const [activeMood, setActiveMood] = useState('jeweler_daylight');
   const [activeCurrency, setActiveCurrency] = useState('PHP');
@@ -25,16 +31,22 @@ export function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutPackaging, setCheckoutPackaging] = useState(null);
+  const [pendingCheckoutPackaging, setPendingCheckoutPackaging] = useState(null);
 
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isUnboxingOpen, setIsUnboxingOpen] = useState(false);
   const [isConciergeOpen, setIsConciergeOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [authNotice, setAuthNotice] = useState('');
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
   // Handle product change
   const handleSelectProduct = (prod) => {
     setActiveProduct(prod);
     if (prod.materials && prod.materials.length > 0) {
       setSelectedMaterial(prod.materials[0]);
+    } else {
+      setSelectedMaterial(null);
     }
   };
 
@@ -64,6 +76,14 @@ export function App() {
 
   // Proceed to Checkout
   const handleProceedToCheckout = (packagingConfig) => {
+    if (!isAuthenticated) {
+      sound.playBrassClick();
+      setPendingCheckoutPackaging(packagingConfig);
+      setAuthNotice('Patron sign-in is required before placing an order or authorizing payment.');
+      setIsCartOpen(false);
+      setIsAuthOpen(true);
+      return;
+    }
     setCheckoutPackaging(packagingConfig);
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
@@ -85,6 +105,16 @@ export function App() {
         onOpenMap={() => setIsMapOpen(true)}
         onOpenUnboxing={() => setIsUnboxingOpen(true)}
         onOpenConcierge={() => setIsConciergeOpen(true)}
+        onOpenAuth={(notice) => {
+          setAuthNotice(notice || '');
+          setIsAuthOpen(true);
+        }}
+        onOpenAccount={() => setIsAccountOpen(true)}
+        onSelectTerno={() => {
+          const terno = PRODUCTS.find((p) => p.id === 'terno-capelet');
+          if (terno) handleSelectProduct(terno);
+          document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
+        }}
         activeCurrency={activeCurrency}
         onCurrencyChange={setActiveCurrency}
       />
@@ -163,6 +193,10 @@ export function App() {
         packagingOptions={checkoutPackaging}
         activeCurrency={activeCurrency}
         onOrderCompleted={handleOrderCompleted}
+        onOpenAuth={(notice) => {
+          setAuthNotice(notice || 'Patron sign-in is required before paying.');
+          setIsAuthOpen(true);
+        }}
       />
 
       <UnboxingModal
@@ -178,6 +212,28 @@ export function App() {
       <ConciergeModal
         isOpen={isConciergeOpen}
         onClose={() => setIsConciergeOpen(false)}
+      />
+
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => {
+          setIsAuthOpen(false);
+          setAuthNotice('');
+        }}
+        notice={authNotice}
+        onSuccess={() => {
+          if (pendingCheckoutPackaging) {
+            setCheckoutPackaging(pendingCheckoutPackaging);
+            setPendingCheckoutPackaging(null);
+            setAuthNotice('');
+            setIsCheckoutOpen(true);
+          }
+        }}
+      />
+
+      <AccountModal
+        isOpen={isAccountOpen}
+        onClose={() => setIsAccountOpen(false)}
       />
 
     </div>

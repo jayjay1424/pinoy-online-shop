@@ -8,6 +8,38 @@ export const CURRENCY_RATES = {
 
 export const PRODUCTS = [
   {
+    id: 'terno-capelet',
+    name: 'Modern Sculptural Terno (Barong para sa Kababaihan)',
+    subtitle: 'Haute Butterfly Sleeves in Woven Pandan & Tikog Twill',
+    collection: 'Kasuotan & Sutla',
+    tagline: 'Handwoven Tikog & Pandan Twill • Architectural Butterfly Silhouette',
+    pricePHP: 125000,
+    edition: 'Edisyon Limitado — No. 04 ng 12',
+    batchRemaining: 2,
+    leadTime: 'Woven & sculpted over 40 days',
+    region: 'Basey, Samar & Lumban, Laguna',
+    artisanCooperative: 'Tikog Dreamweavers & Haute Couture Guild',
+    artisanMaster: 'Nanay Corazon & Master Filipiniana Couturiers',
+    fairTradePercentage: 48,
+    has3DModel: true,
+    modelType: 'terno',
+    modelGlbUrl: '/models/terno.glb',
+    description: 'An architectural Philippine haute-couture gown uniting the iconic towering butterfly sleeves of the traditional Maria Clara and Terno with authentic handwoven pandan and tikog grass fiber twill weave, accented with deep botanical crimson and magenta herringbone borders.',
+    specs: [
+      { label: 'Silhouette', value: 'High-slit architectural mermaid silhouette with soaring butterfly sleeves' },
+      { label: 'Weaving', value: 'Handwoven Tikog and wild coastal Pandan fiber twill weave' },
+      { label: 'Natural Accents', value: 'Botanical madder root and magenta dyed warp bands' },
+      { label: 'Structure', value: 'Architectural boning with couture silk organza backing' }
+    ],
+    materials: [],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.4, 3.4], target: [0, 0.75, 0] },
+      { id: 'sleeve', label: 'Butterfly Sleeve', pos: [0.85, 1.55, 1.4], target: [0.35, 1.35, 0] },
+      { id: 'bodice', label: 'Woven Bodice', pos: [0, 1.15, 1.5], target: [0, 1.0, 0] },
+      { id: 'skirt', label: 'Flared Mermaid Hem', pos: [0.95, 0.45, 1.6], target: [0, 0.25, 0] }
+    ]
+  },
+  {
     id: 'bayong-royale',
     name: 'Bayong Royale',
     subtitle: 'Haute Woven Palm Leaf Tote',
@@ -45,42 +77,7 @@ export const PRODUCTS = [
       { id: 'top', label: 'Top Interior', pos: [0, 3.2, 0.2], target: [0, 0, 0] }
     ]
   },
-  {
-    id: 'barong-bomber',
-    name: 'Ilustrado Avant-Barong Bomber',
-    subtitle: 'Translucent Piña-Seda with Calado Needlework',
-    collection: 'Kasuotan & Sutla',
-    tagline: 'Kalibo Piña Fiber • Lumban Hand Calado • Ribbed Raw Silk',
-    pricePHP: 88500,
-    edition: 'Edisyon Limitado — No. 05 ng 25',
-    batchRemaining: 3,
-    leadTime: 'Loomed & embroidered over 38 days',
-    region: 'Kalibo, Aklan & Lumban, Laguna',
-    artisanCooperative: 'Lumban Master Embroiderers Guild',
-    artisanMaster: 'Aling Remedios (Calado Master)',
-    fairTradePercentage: 48,
-    has3DModel: true,
-    modelType: 'barong',
-    description: 'Transforming the traditional formal Barong Tagalog into an architectural luxury streetwear bomber jacket. Sheer hand-scraped pineapple leaf fibers blended with raw silk (Piña-Seda), hand-pulled geometric Lumban Calado needlework along the chest pechera, and solid antique brass zipper hardware.',
-    specs: [
-      { label: 'Body Fabric', value: 'Sheer hand-loomed Piña-Seda (70% Pineapple / 30% Silk)' },
-      { label: 'Embroidery', value: 'Traditional Calado open-work needle relief' },
-      { label: 'Trims', value: 'Ribbed Italian raw silk collar, cuffs, and hem' },
-      { label: 'Buttons', value: 'Hand-carved natural Mother-of-Pearl buttons' },
-      { label: 'Hardware', value: 'Solid antique cast Philippine brass dual zipper' }
-    ],
-    materials: [
-      { id: 'pina-ecru', name: 'Natural Ecru Piña', colorName: 'Warm Sheer Ivory', hex: '#FBF8F0', embroideryHex: '#E5C158', trimHex: '#5C3A21' },
-      { id: 'pina-chestnut', name: 'Smoked Chestnut', colorName: 'Rich Toasted Amber', hex: '#6E473B', embroideryHex: '#D4AF37', trimHex: '#24140E' },
-      { id: 'pina-obsidian', name: 'Obsidian Silk', colorName: 'Midnight Sheer Cacao', hex: '#1C140E', embroideryHex: '#C4975D', trimHex: '#180D09' }
-    ],
-    cameraPresets: [
-      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.1, 2.9], target: [0, 0.6, 0] },
-      { id: 'macro', label: 'Calado Embroidery', pos: [0, 0.8, 1.2], target: [0, 0.75, 0] },
-      { id: 'profile', label: 'Raglan Sleeve', pos: [1.9, 0.9, 0.8], target: [0, 0.6, 0] },
-      { id: 'top', label: 'Mandarin Collar', pos: [0, 2.4, 0.5], target: [0, 1.1, 0] }
-    ]
-  },
+
   {
     id: 'perlas-silangan',
     name: 'Perlas ng Silangan',
@@ -153,74 +150,6 @@ export const PRODUCTS = [
     ]
   },
   {
-    id: 'maranao-cuff',
-    name: 'Maranao Okir Heirloom Cuff',
-    subtitle: 'Lost-Wax Cast Solid Brass with Mindoro Jade',
-    collection: 'Perlas & Alahas',
-    tagline: 'Tugaya UNESCO Heritage • Lost-Wax Brass Casting',
-    pricePHP: 29500,
-    edition: 'Edisyon Limitado — No. 14 ng 35',
-    batchRemaining: 6,
-    leadTime: 'Hand-cast in 10 days',
-    region: 'Tugaya, Lanao del Sur, Mindanao',
-    artisanCooperative: 'Tugaya Brasscasters Collective',
-    artisanMaster: 'Ustadz Jamil (Master Okir Sculptor)',
-    fairTradePercentage: 45,
-    has3DModel: true,
-    modelType: 'cuff',
-    description: 'Cast in heavy solid yellow brass using the ancient lost-wax technique in Tugaya, Lanao del Sur. Chiseled with flowing serpentine Okir a Datu plant motifs and inset with natural Mindoro green jade.',
-    specs: [
-      { label: 'Metal', value: 'Heavy solid antique yellow brass (unplated)' },
-      { label: 'Motif', value: 'Serpentine Okir a Datu (royal plant tendrils)' },
-      { label: 'Gemstone', value: 'Natural raw Mindoro Nephrite Jade cabochon' },
-      { label: 'Weight', value: '115 grams' }
-    ],
-    materials: [
-      { id: 'brass-antique', name: 'Antique Cast Brass', colorName: 'Warm Yellow Brass', hex: '#C4975D', brassHex: '#C4975D', jadeHex: '#2D6A4F' },
-      { id: 'brass-golden', name: 'Burnished Gold Brass', colorName: 'Radiant Polished Brass', hex: '#D8B277', brassHex: '#D8B277', jadeHex: '#1B4D3E' }
-    ],
-    cameraPresets: [
-      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.0, 2.6], target: [0, 0.6, 0] },
-      { id: 'macro', label: 'Jade Cabochon', pos: [0, 1.4, 1.1], target: [0, 1.25, 0] },
-      { id: 'profile', label: 'Okir Relief', pos: [1.8, 0.7, 0.5], target: [0, 0.6, 0] },
-      { id: 'top', label: 'Torque Opening', pos: [0, 2.4, 0.1], target: [0, 0.6, 0] }
-    ]
-  },
-  {
-    id: 'tnalak-clutch',
-    name: "T'nalak Dreamweaver Minaudière",
-    subtitle: 'Sacred Abaca Evening Clutch with Capiz Clasp',
-    collection: 'Habi & Dahon',
-    tagline: 'Lake Sebu Sacred Dreamweave • Carved Mother-of-Pearl Clasp',
-    pricePHP: 62000,
-    edition: 'Edisyon Limitado — Habi No. 07 ng 20',
-    batchRemaining: 3,
-    leadTime: 'Weaving initiated after spiritual dream prayer',
-    region: 'Lake Sebu, South Cotabato, Mindanao',
-    artisanCooperative: "T'boli Sacred Dreamweavers Collective",
-    artisanMaster: 'Bo-i Maria (Living Treasure Lineage)',
-    fairTradePercentage: 48,
-    has3DModel: true,
-    modelType: 'clutch',
-    description: "Woven from sacred abaca fibers by T'boli master dreamweavers who receive patterns through ancestral visions. Set inside an architectural brushed gold frame with a hand-carved iridescent Mother-of-Pearl push clasp.",
-    specs: [
-      { label: 'Textile', value: "Hand-loomed T'nalak sacred abaca fiber" },
-      { label: 'Natural Dyes', value: 'Locally foraged bark (crimson) & river mud (black)' },
-      { label: 'Frame', value: 'Brushed champagne brass with magnetic click' },
-      { label: 'Clasp', value: 'Hand-carved natural iridescent Mother-of-Pearl' }
-    ],
-    materials: [
-      { id: 'tnalak-classic', name: 'Sacred Tri-Color', colorName: 'River Mud Black & Bark Crimson', hex: '#2B211E', frameHex: '#C4975D' },
-      { id: 'tnalak-gold', name: 'Harvest Ochre', colorName: 'Sun-Bleached Golden Abaca', hex: '#B47A46', frameHex: '#8C5A3C' }
-    ],
-    cameraPresets: [
-      { id: 'overview', label: 'Overview (3/4)', pos: [0, 0.9, 2.6], target: [0, 0, 0] },
-      { id: 'macro', label: 'Capiz Clasp Detail', pos: [0, 0.4, 1.2], target: [0, 0.3, 0] },
-      { id: 'profile', label: 'Brass Bevel', pos: [1.8, 0.5, 0.5], target: [0, 0, 0] },
-      { id: 'top', label: 'Top Silhouette', pos: [0, 2.5, 0.1], target: [0, 0, 0] }
-    ]
-  },
-  {
     id: 'capiz-luminary',
     name: 'Ilaw ng Silangan Luminary',
     subtitle: 'Architectural Capiz Shell & Brass Lantern',
@@ -253,24 +182,6 @@ export const PRODUCTS = [
       { id: 'top', label: 'Top Facets', pos: [0, 3.4, 0.2], target: [0, 0.4, 0] }
     ]
   },
-  // Additional Couture & Heritage Pieces
-  {
-    id: 'terno-capelet',
-    name: 'Modern Sculptural Terno Capelet',
-    subtitle: 'Structured Butterfly Sleeve Evening Cape',
-    collection: 'Kasuotan & Sutla',
-    tagline: 'Ilocos Binakol Inabel • Architectural Butterfly Contours',
-    pricePHP: 58000,
-    edition: 'Edisyon Limitado — No. 06 ng 20',
-    batchRemaining: 3,
-    leadTime: 'Crafted in 20 days',
-    region: 'Vigan, Ilocos Sur',
-    artisanCooperative: 'Ilocos Heritage Weavers Guild',
-    artisanMaster: 'Nanay Corazon (Master Inabel Weaver)',
-    fairTradePercentage: 46,
-    has3DModel: false,
-    description: 'The iconic Philippine butterfly sleeve reimagined as an architectural, removable evening capelet tailored from handwoven Ilocos Inabel binakol optical cloth with a hand-cast Mother-of-Pearl hook chain.'
-  },
   {
     id: 'mandirigma-watch',
     name: 'Mandirigma Damascus & Kamagong Watch',
@@ -285,25 +196,17 @@ export const PRODUCTS = [
     artisanCooperative: 'Apulit Bladesmiths & Horology Guild',
     artisanMaster: 'Panday Jose & Master Watchmakers',
     fairTradePercentage: 44,
-    has3DModel: false,
-    description: 'A mechanical luxury timepiece featuring a dial hand-forged from folded Philippine pattern-welded Damascus steel inspired by ancient Kalis swords, encased in native Kamagong ebony wood with an abaca strap.'
-  },
-  {
-    id: 'bathala-trench',
-    name: '"Habi ng Bathala" Inabel Silk Trench',
-    subtitle: 'Water-Repellent Handwoven Heritage Overcoat',
-    collection: 'Kasuotan & Sutla',
-    tagline: 'Antique Wooden Pedal Loom • Carabao Horn Hardware',
-    pricePHP: 68000,
-    edition: 'Tailored Bespoke Allocation',
-    batchRemaining: 4,
-    leadTime: 'Loomed & tailored over 28 days',
-    region: 'Bangued, Abra & Manila',
-    artisanCooperative: 'Abra Natural Dyers Collective',
-    artisanMaster: 'Aling Teodora & Master Tailors',
-    fairTradePercentage: 48,
-    has3DModel: false,
-    description: 'An oversized double-breasted luxury trench coat tailored from water-repellent handwoven Ilocos Inabel cotton-silk blend, finished with reclaimed carabao horn buttons and an abaca waist belt.'
+    has3DModel: true,
+    modelType: 'watch',
+    description: 'A mechanical luxury timepiece featuring a dial hand-forged from folded Philippine pattern-welded Damascus steel inspired by ancient Kalis swords, encased in native Kamagong ebony wood with an abaca strap.',
+    materials: [
+      { id: 'kamagong-steel', name: 'Ebony & Damascus Steel', hex: '#24140E', steelHex: '#4A5568' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.1, 2.4], target: [0, 0.65, 0] },
+      { id: 'dial', label: 'Damascus Dial', pos: [0, 0.7, 1.1], target: [0, 0.65, 0] },
+      { id: 'profile', label: 'Crown & Bezel', pos: [1.5, 0.7, 0.6], target: [0, 0.65, 0] }
+    ]
   },
   {
     id: 'butuan-ring',
@@ -319,8 +222,16 @@ export const PRODUCTS = [
     artisanCooperative: 'Meycauayan Heirloom Goldsmiths',
     artisanMaster: 'Mang Celso',
     fairTradePercentage: 46,
-    has3DModel: false,
-    description: 'Recreating the legendary pre-colonial 10th-century gold granulation discovered in Butuan, cast in heavy solid gold with micro-wire filigree granulation.'
+    has3DModel: true,
+    modelType: 'ring',
+    description: 'Recreating the legendary pre-colonial 10th-century gold granulation discovered in Butuan, cast in heavy solid gold with micro-wire filigree granulation.',
+    materials: [
+      { id: 'butuan-24k', name: '24K Golden Sun', hex: '#E5C158' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.1, 2.2], target: [0, 0.8, 0] },
+      { id: 'table', label: 'Granulated Solar Boss', pos: [0, 1.6, 0.8], target: [0, 1.25, 0] }
+    ]
   },
   {
     id: 'salakot-datu',
@@ -336,8 +247,16 @@ export const PRODUCTS = [
     artisanCooperative: 'Bulacan Traditional Hatters Guild',
     artisanMaster: 'Mang Tacio',
     fairTradePercentage: 42,
-    has3DModel: false,
-    description: 'An avant-garde high-fashion sun hat crafted from paper-thin shaved native bamboo ribs, edged with antique silver filigree finials and mother-of-pearl beads.'
+    has3DModel: true,
+    modelType: 'salakot',
+    description: 'An avant-garde high-fashion sun hat crafted from paper-thin shaved native bamboo ribs, edged with antique silver filigree finials and mother-of-pearl beads.',
+    materials: [
+      { id: 'bamboo-natural', name: 'Sun-Bleached Shaved Bamboo', hex: '#D8B781', silverHex: '#E2E8F0' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.2, 2.8], target: [0, 0.6, 0] },
+      { id: 'spire', label: 'Silver Spire Finial', pos: [0, 1.6, 1.2], target: [0, 1.0, 0] }
+    ]
   },
   {
     id: 'batek-robe',
@@ -353,8 +272,15 @@ export const PRODUCTS = [
     artisanCooperative: 'Kalinga Indigenous Weavers Association',
     artisanMaster: 'Ina Rebecca (Tattoo Lineage)',
     fairTradePercentage: 50,
-    has3DModel: false,
-    description: 'A floor-length luxury lounge robe inspired by indigenous warrior tattoo motifs, hand-loomed with natural indigo and charcoal plant dyes.'
+    has3DModel: true,
+    modelType: 'robe',
+    description: 'A floor-length luxury lounge robe inspired by indigenous warrior tattoo motifs, hand-loomed with natural indigo and charcoal plant dyes.',
+    materials: [
+      { id: 'kalinga-indigo', name: 'Botanical Indigo & Charcoal', hex: '#1D2A3A' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.2, 2.8], target: [0, 0.7, 0] }
+    ]
   },
   {
     id: 'burnay-decanter',
@@ -370,8 +296,16 @@ export const PRODUCTS = [
     artisanCooperative: 'Vigan Burnayan Pottery Master Guild',
     artisanMaster: 'Mang Fidel (National Folk Artist)',
     fairTradePercentage: 45,
-    has3DModel: false,
-    description: 'A heavy unglazed stoneware decanter for vintage Philippine reserve spirits, wood-fired in ancient dragon kilns and wrapped with woven abaca neck rope and a brass stopper.'
+    has3DModel: true,
+    modelType: 'burnay',
+    description: 'A heavy unglazed stoneware decanter for vintage Philippine reserve spirits, wood-fired in ancient dragon kilns and wrapped with woven abaca neck rope and a brass stopper.',
+    materials: [
+      { id: 'vigan-clay', name: 'Dragon-Kiln Unglazed Clay', hex: '#4A3528', brassHex: '#C4975D' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.3, 3.0], target: [0, 0.8, 0] },
+      { id: 'spout', label: 'Forged Brass Spout', pos: [0, 1.8, 1.2], target: [0, 1.5, 0] }
+    ]
   },
   {
     id: 'barong-dalisay',
@@ -387,25 +321,15 @@ export const PRODUCTS = [
     artisanCooperative: 'Lumban Master Embroiderers Guild',
     artisanMaster: 'Aling Remedios',
     fairTradePercentage: 48,
-    has3DModel: false,
-    description: 'Classic bespoke formal Barong Tagalog tailored from pure hand-scraped Piña-Seda with Lumban Calado open-work needlework and Mother-of-Pearl buttons.'
-  },
-  {
-    id: 'yakan-stole',
-    name: 'Yakan Seputangan Royal Stole',
-    subtitle: 'Basilan Sacred Geometric Backstrap Weave',
-    collection: 'Kasuotan & Sutla',
-    tagline: 'Lamitan Backstrap Loom • Botanical Plant Dyes',
-    pricePHP: 24500,
-    edition: 'Edisyon Limitado — No. 22 ng 40',
-    batchRemaining: 5,
-    leadTime: 'Woven over 16 days',
-    region: 'Lamitan, Basilan & Zamboanga',
-    artisanCooperative: 'Yakan Indigenous Weavers Village',
-    artisanMaster: 'Hadja Sitti',
-    fairTradePercentage: 50,
-    has3DModel: false,
-    description: 'An intricate tapestry stole woven on traditional backstrap looms with diamond Banga-banga and python-eye motifs in natural botanical dyes.'
+    has3DModel: true,
+    modelType: 'dalisay',
+    description: 'Classic bespoke formal Barong Tagalog tailored from pure hand-scraped Piña-Seda with Lumban Calado open-work needlework and Mother-of-Pearl buttons.',
+    materials: [
+      { id: 'pina-pure', name: 'Pure Handloom Piña Ivory', hex: '#FAF8F2', embroideryHex: '#D4AF37', trimHex: '#3D2415' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.2, 3.0], target: [0, 0.7, 0] }
+    ]
   },
   {
     id: 'creolla-earrings',
@@ -421,8 +345,16 @@ export const PRODUCTS = [
     artisanCooperative: 'Meycauayan Goldsmiths Guild',
     artisanMaster: 'Mang Rodolfo',
     fairTradePercentage: 44,
-    has3DModel: false,
-    description: 'Traditional 19th-century hoop silhouette fashioned from hand-twisted 18K gold filigree wirework with natural Palawan seed pearls.'
+    has3DModel: true,
+    modelType: 'creolla',
+    description: 'Traditional 19th-century hoop silhouette fashioned from hand-twisted 18K gold filigree wirework with natural Palawan seed pearls.',
+    materials: [
+      { id: 'creolla-gold', name: '18K Filigree Gold', hex: '#D4AF37' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.0, 2.4], target: [0, 0.6, 0] },
+      { id: 'pearl-drop', label: 'Palawan Pearl Drop', pos: [0.55, 0.4, 1.2], target: [0.55, 0.2, 0] }
+    ]
   },
   {
     id: 'chrono-vault',
@@ -438,7 +370,15 @@ export const PRODUCTS = [
     artisanCooperative: 'Paete Master Woodcarvers Guild',
     artisanMaster: 'Mang Danilo',
     fairTradePercentage: 42,
-    has3DModel: false,
-    description: 'A stately collector’s 4-piece watch trunk hand-carved from native Kamagong ebony wood with polished black carabao horn inlay corner brackets.'
+    has3DModel: true,
+    modelType: 'vault',
+    description: 'A stately collector’s 4-piece watch trunk hand-carved from native Kamagong ebony wood with polished black carabao horn inlay corner brackets.',
+    materials: [
+      { id: 'kamagong-horn', name: 'Paete Ebony & Carabao Horn', hex: '#24140E', hornHex: '#120D0A' }
+    ],
+    cameraPresets: [
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.3, 3.0], target: [0, 0.4, 0] },
+      { id: 'tray', label: 'Velvet Watch Trays', pos: [0, 1.7, 1.4], target: [0, 0.4, 0] }
+    ]
   }
 ];

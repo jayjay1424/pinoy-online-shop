@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Volume2, VolumeX, MapPin, Globe, Sparkles, Calendar } from 'lucide-react';
+import { ShoppingBag, Volume2, VolumeX, MapPin, Globe, Sparkles, Calendar, User, UserCheck } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
+import { useAuth } from '../context/AuthContext';
 
 export function Navbar({
   cartCount,
@@ -9,9 +10,13 @@ export function Navbar({
   onOpenMap,
   onOpenUnboxing,
   onOpenConcierge,
+  onSelectTerno,
+  onOpenAuth,
+  onOpenAccount,
   activeCurrency,
   onCurrencyChange,
 }) {
+  const { currentUser, isAuthenticated } = useAuth();
   const [audioActive, setAudioActive] = useState(sound.enabled);
   const [currencyDropdown, setCurrencyDropdown] = useState(false);
 
@@ -27,7 +32,15 @@ export function Navbar({
       <div className="bg-[#24140E] text-[#FAF8F5] text-[10px] sm:text-[11px] py-1 px-4 text-center tracking-widest font-mono flex items-center justify-center gap-2 border-b border-[#C4975D]/30">
         <span className="text-[#C4975D] font-bold">EDISYON 2026</span>
         <span>•</span>
-        <span className="truncate">WHITE-GLOVE COURIER DELIVERY TO MANILA, GENEVA, TOKYO & NEW YORK</span>
+        <button
+          onClick={() => {
+            sound.playBrassClick();
+            if (onSelectTerno) onSelectTerno();
+          }}
+          className="text-[#EAD7B2] hover:text-white underline transition-colors"
+        >
+          ✦ FEATURED: 3D MODERN SCULPTURAL TERNO (BARONG PARA SA KABABAIHAN)
+        </button>
         <span>•</span>
         <button
           onClick={() => {
@@ -56,10 +69,19 @@ export function Navbar({
           </div>
 
           {/* Center Navigation Links (Hidden on small mobile) */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium tracking-wider text-[#5C3A21] uppercase">
+          <nav className="hidden md:flex items-center gap-5 text-xs font-medium tracking-wider text-[#5C3A21] uppercase">
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                if (onSelectTerno) onSelectTerno();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 shadow-2xs transition-all lowercase capitalize"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-spin" style={{ animationDuration: '6s' }} />
+              <span>3D Terno (Barong for Woman)</span>
+            </button>
             <a href="#stage" className="hover:text-[#24140E] transition-colors py-1">The 3D Stage</a>
             <a href="#catalog" className="hover:text-[#24140E] transition-colors py-1">Heritage Catalog</a>
-            <a href="#story" className="hover:text-[#24140E] transition-colors py-1">Mula sa Lupa</a>
             <button
               onClick={() => { sound.playBrassClick(); onOpenMap(); }}
               className="flex items-center gap-1.5 hover:text-[#24140E] transition-colors py-1"
@@ -123,6 +145,41 @@ export function Navbar({
                 </div>
               )}
             </div>
+
+            {/* Client Account / Sign In Trigger */}
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                if (isAuthenticated) {
+                  onOpenAccount();
+                } else {
+                  onOpenAuth();
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+                isAuthenticated
+                  ? 'bg-amber-50 border-amber-300 text-amber-950 hover:bg-amber-100 shadow-2xs'
+                  : 'bg-[#FAF8F5] border-[#5C3A21]/15 text-[#5C3A21] hover:bg-[#5C3A21] hover:text-white'
+              }`}
+              title={isAuthenticated ? 'Open Atelier Account' : 'Sign In to Likha Circle'}
+            >
+              {isAuthenticated ? (
+                <>
+                  <span className="w-4 h-4 rounded-full bg-[#5C3A21] text-[#EAD7B2] text-[9px] font-bold flex items-center justify-center -ml-0.5">
+                    {currentUser.name.charAt(0)}
+                  </span>
+                  <span className="max-w-[70px] sm:max-w-[100px] truncate font-semibold">
+                    {currentUser.name.split(' ')[0]}
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse hidden sm:inline" />
+                </>
+              ) : (
+                <>
+                  <User className="w-3.5 h-3.5 text-[#8C5A3C]" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </>
+              )}
+            </button>
 
             {/* Sound Toggle */}
             <button

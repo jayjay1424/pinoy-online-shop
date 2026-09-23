@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCw, Layers, Eye, Lightbulb, Compass, RotateCcw } from 'lucide-react';
+import { RotateCw, Layers, Eye, Lightbulb, Compass, RotateCcw, Upload } from 'lucide-react';
 import { sound } from '../utils/sound';
 
 export function CameraHUD({
@@ -13,6 +13,7 @@ export function CameraHUD({
   isLuminaryLightOn,
   onToggleLuminaryLight,
   onResetCamera,
+  onImport3D,
 }) {
   return (
     <div className="absolute inset-x-0 bottom-4 z-20 pointer-events-none px-4 flex flex-col items-center gap-2.5">
@@ -99,6 +100,19 @@ export function CameraHUD({
             <span>{isLuminaryLightOn ? 'Light Glow: ON' : 'Light Glow: OFF'}</span>
           </button>
         )}
+
+        {/* Import Custom 3D (.glb / .gltf) Button */}
+        <button
+          onClick={() => {
+            sound.playBrassClick();
+            if (onImport3D) onImport3D();
+          }}
+          className="px-3 py-1.5 rounded-full transition-all text-xs font-medium flex items-center gap-1.5 text-[#5C3A21] bg-[#F2ECE4]/90 hover:bg-[#E8DCCF] border border-[#5C3A21]/20 shadow-2xs"
+          title="Import 3D model (.glb / .gltf from Meshy.ai or Blender)"
+        >
+          <Upload className="w-3.5 h-3.5 text-[#8C5A3C]" />
+          <span className="whitespace-nowrap font-medium">Import .GLB</span>
+        </button>
 
         {/* Reset Camera Button */}
         <button

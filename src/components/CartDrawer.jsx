@@ -14,9 +14,11 @@ import {
   Layers,
   Flame,
   PlusCircle,
+  Lock,
 } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
+import { useAuth } from '../context/AuthContext';
 
 export function CartDrawer({
   isOpen,
@@ -26,6 +28,7 @@ export function CartDrawer({
   onProceedToCheckout,
   activeCurrency,
 }) {
+  const { isAuthenticated } = useAuth();
   const rateInfo = CURRENCY_RATES[activeCurrency] || CURRENCY_RATES.PHP;
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes in seconds
   const [packagingType, setPackagingType] = useState('Kamagong Crate');
@@ -283,6 +286,13 @@ export function CartDrawer({
                 </span>
               </div>
 
+              {!isAuthenticated && (
+                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2 animate-fadeIn">
+                  <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <span>Patron sign-in required. You will be prompted to log in before checking out.</span>
+                </div>
+              )}
+
               <button
                 onClick={() => {
                   sound.playWoodThud();
@@ -294,7 +304,7 @@ export function CartDrawer({
                 }}
                 className="w-full py-3.5 px-6 rounded-full bg-[#5C3A21] text-white hover:bg-[#432916] active:scale-98 transition-all font-medium text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-warm"
               >
-                <span>Proceed to Private Checkout</span>
+                <span>{isAuthenticated ? 'Proceed to Private Checkout' : 'Sign In & Place Order'}</span>
                 <ArrowRight className="w-4 h-4 text-[#C4975D]" />
               </button>
 

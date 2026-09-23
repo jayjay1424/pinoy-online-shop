@@ -7,7 +7,7 @@ export function createLuminaryModel(capizHex = '#FFFDF8', brassHex = '#C4975D') 
 
   const capizMat = MaterialsFactory.createCapizShellMaterial(capizHex);
   const brassMat = MaterialsFactory.createAntiqueBrassMaterial(brassHex);
-  const woodMat = MaterialsFactory.createKamagongWoodMaterial();
+  const woodMat = MaterialsFactory.createKamagongWoodMaterial('#24140E');
 
   const pedestalGroup = new THREE.Group();
   const lanternGroup = new THREE.Group();
@@ -17,49 +17,78 @@ export function createLuminaryModel(capizHex = '#FFFDF8', brassHex = '#C4975D') 
   root.add(lanternGroup);
   root.add(lightGroup);
 
-  // 1. Turned Kamagong Wood Base
-  const baseGeo = new THREE.CylinderGeometry(0.55, 0.65, 0.15, 32);
+  // 1. Turned Native Kamagong Ebony Wood Pedestal Base
+  const baseGeo = new THREE.CylinderGeometry(0.56, 0.68, 0.16, 36);
   const baseMesh = new THREE.Mesh(baseGeo, woodMat);
-  baseMesh.position.y = 0.075;
+  baseMesh.position.y = 0.08;
   baseMesh.castShadow = true;
   baseMesh.receiveShadow = true;
   pedestalGroup.add(baseMesh);
 
-  // 2. Brass Collar
-  const collarGeo = new THREE.CylinderGeometry(0.35, 0.45, 0.08, 32);
+  // Stepped brass accent collar ring
+  const collarGeo = new THREE.CylinderGeometry(0.36, 0.46, 0.09, 36);
   const collarMesh = new THREE.Mesh(collarGeo, brassMat);
-  collarMesh.position.y = 0.18;
+  collarMesh.position.y = 0.19;
   collarMesh.castShadow = true;
   pedestalGroup.add(collarMesh);
 
-  // 3. Faceted Capiz Shell Lantern Body (Icosahedron / Dodecahedron faceted geometric look)
-  const lanternGeo = new THREE.DodecahedronGeometry(0.75, 1);
-  lanternGeo.scale(0.9, 1.3, 0.9);
+  // 2. Faceted Natural Capiz Shell Lantern Body
+  const lanternGeo = new THREE.DodecahedronGeometry(0.78, 1);
+  lanternGeo.scale(0.92, 1.34, 0.92);
   const lanternMesh = new THREE.Mesh(lanternGeo, capizMat);
-  lanternMesh.position.y = 1.05;
+  lanternMesh.position.y = 1.08;
   lanternMesh.castShadow = true;
   lanternMesh.receiveShadow = true;
   lanternGroup.add(lanternMesh);
 
-  // Wireframe Brass Ribs (Faceted edges)
+  // Soldered Brass Came Framing Ribbons (Facets edges)
   const wireGeo = new THREE.WireframeGeometry(lanternGeo);
-  const wireMat = new THREE.LineBasicMaterial({ color: new THREE.Color(brassHex), linewidth: 2 });
+  const wireMat = new THREE.LineBasicMaterial({
+    color: new THREE.Color(brassHex),
+    linewidth: 2,
+    transparent: true,
+    opacity: 0.85,
+  });
   const wireMesh = new THREE.LineSegments(wireGeo, wireMat);
   wireMesh.position.copy(lanternMesh.position);
   lanternGroup.add(wireMesh);
 
-  // 4. Internal Glowing Point Light
-  const pointLight = new THREE.PointLight(0xFDB863, 1.8, 4.0, 1.5);
-  pointLight.position.y = 1.05;
+  // Solid Brass Solder Nodes at Key Vertices
+  const solderGeo = new THREE.SphereGeometry(0.024, 10, 10);
+  const lanternPos = lanternGeo.attributes.position;
+  // Place nodes on a subset of unique vertices
+  for (let i = 0; i < lanternPos.count; i += 6) {
+    const vx = lanternPos.getX(i);
+    const vy = lanternPos.getY(i) + 1.08;
+    const vz = lanternPos.getZ(i);
+    const node = new THREE.Mesh(solderGeo, brassMat);
+    node.position.set(vx, vy, vz);
+    lanternGroup.add(node);
+  }
+
+  // 3. Internal Warm 2400K Glowing Point Light & Emissive Bulb Core
+  const pointLight = new THREE.PointLight(0xFFA834, 2.2, 5.0, 1.4);
+  pointLight.position.y = 1.08;
   lightGroup.add(pointLight);
 
-  // Soft internal bulb core
-  const bulbMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 16, 16),
-    new THREE.MeshBasicMaterial({ color: 0xFFF3D6 })
-  );
-  bulbMesh.position.y = 1.05;
+  // Soft internal bulb core with intense glowing filament
+  const bulbMat = new THREE.MeshBasicMaterial({
+    color: 0xFFF2D1,
+  });
+  const bulbMesh = new THREE.Mesh(new THREE.SphereGeometry(0.09, 20, 20), bulbMat);
+  bulbMesh.position.y = 1.08;
   lightGroup.add(bulbMesh);
+
+  // Gentle ambient glow aura inside lantern
+  const auraMat = new THREE.MeshBasicMaterial({
+    color: 0xFFA834,
+    transparent: true,
+    opacity: 0.18,
+    side: THREE.BackSide,
+  });
+  const auraMesh = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), auraMat);
+  auraMesh.position.y = 1.08;
+  lightGroup.add(auraMesh);
 
   let isLightOn = true;
   function toggleLight(on) {
@@ -68,17 +97,19 @@ export function createLuminaryModel(capizHex = '#FFFDF8', brassHex = '#C4975D') 
     } else {
       isLightOn = !isLightOn;
     }
-    pointLight.intensity = isLightOn ? 1.8 : 0;
+    pointLight.intensity = isLightOn ? 2.2 : 0;
     bulbMesh.visible = isLightOn;
-    capizMat.roughness = isLightOn ? 0.25 : 0.45;
+    auraMesh.visible = isLightOn;
+    capizMat.roughness = isLightOn ? 0.16 : 0.42;
+    capizMat.transmission = isLightOn ? 0.72 : 0.50;
     return isLightOn;
   }
 
   // Exploded View API
   function setExploded(t) {
-    lanternGroup.position.y = t * 0.4;
-    pedestalGroup.position.y = -t * 0.2;
-    lightGroup.position.y = t * 0.2;
+    lanternGroup.position.y = t * 0.42;
+    pedestalGroup.position.y = -t * 0.22;
+    lightGroup.position.y = t * 0.22;
   }
 
   function updateMaterials(newCapizHex, newBrassHex) {
@@ -95,4 +126,3 @@ export function createLuminaryModel(capizHex = '#FFFDF8', brassHex = '#C4975D') 
 
   return root;
 }
-
