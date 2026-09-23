@@ -530,45 +530,57 @@ function createCapizShellTexture() {
   return texture;
 }
 
-// 8. Gossamer Piña-Seda Sheer Fabric Texture
+// 8. Gossamer Piña-Seda Sheer Fabric Texture (Lightweight woven micro-weave)
 function createPinaSedaTexture() {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = 1024;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#FCF9F2';
-  ctx.fillRect(0, 0, 512, 512);
+  // Warm organic ivory foundation
+  ctx.fillStyle = '#FAF7EE';
+  ctx.fillRect(0, 0, 1024, 1024);
 
-  // Fine hand-loomed pineapple leaf warp & weft threads
-  ctx.strokeStyle = 'rgba(180, 160, 130, 0.28)';
-  ctx.lineWidth = 0.8;
+  // Microscopic fine handloom pineapple warp & weft threads
+  ctx.strokeStyle = 'rgba(195, 175, 142, 0.22)';
+  ctx.lineWidth = 0.9;
 
-  for (let y = 0; y < 512; y += 4) {
+  for (let y = 0; y < 1024; y += 4) {
     ctx.beginPath();
     ctx.moveTo(0, y);
-    ctx.lineTo(512, y);
+    ctx.lineTo(1024, y);
     ctx.stroke();
   }
-  for (let x = 0; x < 512; x += 4) {
+  for (let x = 0; x < 1024; x += 4) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, 512);
+    ctx.lineTo(x, 1024);
     ctx.stroke();
   }
 
-  // Natural organic fiber slubs
-  ctx.fillStyle = 'rgba(195, 175, 140, 0.5)';
-  for (let s = 0; s < 130; s++) {
-    const sx = Math.random() * 512;
-    const sy = Math.random() * 512;
-    ctx.fillRect(sx, sy, 5 + Math.random() * 8, 1.6);
+  // Cross-thread micro-interlocking variation
+  ctx.strokeStyle = 'rgba(235, 225, 205, 0.18)';
+  ctx.lineWidth = 0.6;
+  for (let y = 2; y < 1024; y += 8) {
+    for (let x = 2; x < 1024; x += 8) {
+      ctx.strokeRect(x, y, 2, 2);
+    }
+  }
+
+  // Natural organic pineapple leaf fiber slubs (irregular thread variations)
+  ctx.fillStyle = 'rgba(185, 162, 128, 0.35)';
+  for (let s = 0; s < 240; s++) {
+    const sx = Math.random() * 1024;
+    const sy = Math.random() * 1024;
+    const slubLen = 6 + Math.random() * 14;
+    const slubH = 1.2 + Math.random() * 0.8;
+    ctx.fillRect(sx, sy, slubLen, slubH);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(8, 8);
+  texture.repeat.set(4, 4);
   return texture;
 }
 
@@ -997,31 +1009,33 @@ export const MaterialsFactory = {
   },
 
   // 6. Translucent Piña-Seda Sheer Fabric Material (Barong Couture)
-  createPinaFabricMaterial(colorHex = '#FBF8F0') {
+  createPinaFabricMaterial(colorHex = '#FAF7EE') {
     return new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(colorHex),
       map: pinaSedaTexture,
-      roughness: 0.58,
-      metalness: 0.03,
-      transmission: 0.48, // Gossamer translucent backlighting
-      thickness: 0.25,
-      ior: 1.34,
+      bumpMap: pinaSedaTexture,
+      bumpScale: 0.012,
+      roughness: 0.72, // Matte woven natural cloth roughness — strictly non-plastic & non-glossy
+      metalness: 0.0,  // Pure organic pineapple & silk fibers, zero metalness
+      transmission: 0.22, // Subtle natural cloth translucency showing the inner Camisa de Chino
+      thickness: 0.38,
+      ior: 1.33,
       side: THREE.DoubleSide,
-      sheen: 0.55,
-      sheenColor: new THREE.Color('#FFF8EB'),
-      sheenRoughness: 0.35,
+      sheen: 0.50, // Subtle organic silk-thread light scatter
+      sheenColor: new THREE.Color('#FFF9E8'),
+      sheenRoughness: 0.40,
     });
   },
 
   // 7. Raised Calado Embroidery Material with Authentic Albedo & Normal Relief
-  createCaladoEmbroideryMaterial(threadHex = '#E5C158') {
+  createCaladoEmbroideryMaterial(threadHex = '#E6CE98') {
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color(threadHex),
       map: caladoColorMap,
       normalMap: caladoNormalMap,
-      normalScale: new THREE.Vector2(1.25, 1.25),
-      roughness: 0.35,
-      metalness: 0.22, // Luster of genuine golden silk thread
+      normalScale: new THREE.Vector2(0.85, 0.85), // Subtle raised thread depth
+      roughness: 0.48, // Satin silk embroidery thread
+      metalness: 0.06, // Natural silk sheen without synthetic metallic glow
       side: THREE.DoubleSide,
     });
   },
