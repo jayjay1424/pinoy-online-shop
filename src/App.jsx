@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PRODUCTS, CURRENCY_RATES } from './data/products';
 import { Navbar } from './components/Navbar';
 import { Stage3D } from './components/Stage3D';
@@ -14,12 +14,38 @@ import { ArtisanMapModal } from './components/ArtisanMapModal';
 import { ConciergeModal } from './components/ConciergeModal';
 import { AuthModal } from './components/AuthModal';
 import { AccountModal } from './components/AccountModal';
+import { AdminModal } from './components/AdminModal';
 import { useAuth } from './context/AuthContext';
 import { sound } from './utils/sound';
 
 export function App() {
   const { isAuthenticated } = useAuth();
-  const [activeProduct, setActiveProduct] = useState(PRODUCTS[0]); // Default: Bayong Royale
+
+  // Dynamic catalog state with localStorage persistence and API sync
+  const [products, setProducts] = useState(() => {
+    try {
+      const stored = localStorage.getItem('likha_catalog_items');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn('Failed to parse catalog from localStorage', e);
+    }
+    return PRODUCTS;
+  });
+
+  const [activeProduct, setActiveProduct] = useState(() => {
+    try {
+      const stored = localStorage.getItem('likha_catalog_items');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+      }
+    } catch (e) {}
+    return PRODUCTS[0];
+  });
+
   const [selectedMaterial, setSelectedMaterial] = useState(
     PRODUCTS[0].materials && PRODUCTS[0].materials.length > 0 ? PRODUCTS[0].materials[0] : null
   );
@@ -39,6 +65,24 @@ export function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authNotice, setAuthNotice] = useState('');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
+
+  // Sync with PostgreSQL / Serverless API on mount if available
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          try {
+            localStorage.setItem('likha_catalog_items', JSON.stringify(data.products));
+          } catch (e) {}
+        }
+      })
+      .catch((err) => {
+        console.log('Using local catalog cache:', err.message);
+      });
+  }, []);
 
   // Handle product change
   const handleSelectProduct = (prod) => {
@@ -95,6 +139,79 @@ export function App() {
     setCart([]);
   };
 
+  // Admin CRUD Handlers
+  const handleCreateProduct = async (newProd) => {
+    setProducts((prev) => {
+      const updated = [newProd, ...prev];
+      try {
+        localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    try {
+      await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProd),
+      });
+    } catch (e) {
+      console.warn('API POST failed, saved to local storage cache:', e);
+    }
+  };
+
+  const handleUpdateProduct = async (updatedProd) => {
+    setProducts((prev) => {
+      const updated = prev.map((p) => (p.id === updatedProd.id ? updatedProd : p));
+      try {
+        localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (activeProduct && activeProduct.id === updatedProd.id) {
+      setActiveProduct(updatedProd);
+      if (updatedProd.materials && updatedProd.materials.length > 0) {
+        setSelectedMaterial(updatedProd.materials[0]);
+      }
+    }
+
+    try {
+      await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProd),
+      });
+    } catch (e) {
+      console.warn('API PUT failed, saved to local storage cache:', e);
+    }
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    setProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try {
+        localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (activeProduct && activeProduct.id === productId) {
+      const remaining = products.filter((p) => p.id !== productId);
+      if (remaining.length > 0) {
+        handleSelectProduct(remaining[0]);
+      }
+    }
+
+    try {
+      await fetch(`/api/products?id=${encodeURIComponent(productId)}`, {
+        method: 'DELETE',
+      });
+    } catch (e) {
+      console.warn('API DELETE failed, saved to local storage cache:', e);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#24140E] font-sans antialiased flex flex-col justify-between">
       
@@ -105,13 +222,14 @@ export function App() {
         onOpenMap={() => setIsMapOpen(true)}
         onOpenUnboxing={() => setIsUnboxingOpen(true)}
         onOpenConcierge={() => setIsConciergeOpen(true)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenAuth={(notice) => {
           setAuthNotice(notice || '');
           setIsAuthOpen(true);
         }}
         onOpenAccount={() => setIsAccountOpen(true)}
         onSelectTerno={() => {
-          const terno = PRODUCTS.find((p) => p.id === 'terno-capelet');
+          const terno = products.find((p) => p.id === 'terno-capelet') || products[0];
           if (terno) handleSelectProduct(terno);
           document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
         }}
@@ -151,18 +269,18 @@ export function App() {
 
           </div>
 
-          {/* 3D Stage Carousel Deck (All 7 3D Models) */}
+          {/* 3D Stage Carousel Deck (All 3D Models in Catalog) */}
           <ProductCarousel
-            products={PRODUCTS}
+            products={products}
             activeProductId={activeProduct.id}
             onSelectProduct={handleSelectProduct}
             activeCurrency={activeCurrency}
           />
         </section>
 
-        {/* 18-Piece Heritage Catalog Grid */}
+        {/* Heritage Catalog Grid */}
         <CatalogGrid
-          products={PRODUCTS}
+          products={products}
           onSelectProduct={handleSelectProduct}
           onQuickAddToCart={handleQuickAddToCart}
           activeCurrency={activeCurrency}
@@ -234,6 +352,21 @@ export function App() {
       <AccountModal
         isOpen={isAccountOpen}
         onClose={() => setIsAccountOpen(false)}
+      />
+
+      {/* Curator Studio (Admin Catalog CRUD Portal) */}
+      <AdminModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        products={products}
+        onCreateProduct={handleCreateProduct}
+        onUpdateProduct={handleUpdateProduct}
+        onDeleteProduct={handleDeleteProduct}
+        onSelectForStage={(prod) => {
+          handleSelectProduct(prod);
+          document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        activeCurrency={activeCurrency}
       />
 
     </div>

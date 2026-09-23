@@ -1,5 +1,6 @@
 import pg from 'pg';
 import { hashPassword } from './security.js';
+import { PRODUCTS } from '../../src/data/products.js';
 
 const { Pool } = pg;
 
@@ -14,6 +15,7 @@ const inMemoryStore = {
   users: [],
   addresses: [],
   orders: [],
+  products: [...PRODUCTS],
 };
 
 // Seed demo account into fallback store
@@ -162,11 +164,41 @@ export async function initDatabase() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- 4. Products Table
+      CREATE TABLE IF NOT EXISTS products (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        subtitle TEXT,
+        collection VARCHAR(100) NOT NULL,
+        tagline TEXT,
+        price_php NUMERIC(12, 2) NOT NULL,
+        edition VARCHAR(150),
+        batch_remaining INTEGER DEFAULT 3,
+        stock_status VARCHAR(50) DEFAULT 'available',
+        lead_time VARCHAR(150),
+        region VARCHAR(150),
+        artisan_cooperative VARCHAR(255),
+        artisan_master VARCHAR(255),
+        fair_trade_percentage INTEGER DEFAULT 45,
+        has_3d_model BOOLEAN DEFAULT false,
+        model_type VARCHAR(100),
+        model_glb_url TEXT,
+        image TEXT,
+        description TEXT,
+        specs JSONB,
+        materials JSONB,
+        camera_presets JSONB,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Performance & Security Indexes
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
       CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+      CREATE INDEX IF NOT EXISTS idx_products_collection ON products(collection);
+      CREATE INDEX IF NOT EXISTS idx_products_stock_status ON products(stock_status);
     `);
 
     // Seed default VIP demo account if not exists
@@ -365,6 +397,98 @@ function handleInMemoryQuery(text, params) {
     };
     inMemoryStore.orders.push(newOrder);
     return { rows: [newOrder], rowCount: 1 };
+  }
+
+  // 9. SELECT products
+  if (normalized.startsWith('select') && normalized.includes('from products')) {
+    if (normalized.includes('where id =')) {
+      const id = params[0];
+      const prod = inMemoryStore.products.find((p) => p.id === id);
+      return { rows: prod ? [{ ...prod }] : [], rowCount: prod ? 1 : 0 };
+    }
+    return { rows: [...inMemoryStore.products], rowCount: inMemoryStore.products.length };
+  }
+
+  // 10. INSERT into products (upsert)
+  if (normalized.startsWith('insert into products')) {
+    const newProduct = {
+      id: params[0],
+      name: params[1],
+      subtitle: params[2],
+      collection: params[3],
+      tagline: params[4],
+      pricePHP: Number(params[5]),
+      edition: params[6],
+      batchRemaining: Number(params[7]),
+      stockStatus: params[8] || 'available',
+      leadTime: params[9],
+      region: params[10],
+      artisanCooperative: params[11],
+      artisanMaster: params[12],
+      fairTradePercentage: Number(params[13]),
+      has3DModel: Boolean(params[14]),
+      modelType: params[15],
+      modelGlbUrl: params[16],
+      image: params[17],
+      description: params[18],
+      specs: typeof params[19] === 'string' ? JSON.parse(params[19] || '[]') : params[19],
+      materials: typeof params[20] === 'string' ? JSON.parse(params[20] || '[]') : params[20],
+      cameraPresets: typeof params[21] === 'string' ? JSON.parse(params[21] || '[]') : params[21],
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+
+    const existingIdx = inMemoryStore.products.findIndex((p) => p.id === newProduct.id);
+    if (existingIdx >= 0) {
+      inMemoryStore.products[existingIdx] = newProduct;
+    } else {
+      inMemoryStore.products.push(newProduct);
+    }
+
+    return { rows: [newProduct], rowCount: 1 };
+  }
+
+  // 11. UPDATE products
+  if (normalized.startsWith('update products')) {
+    const id = params[params.length - 1];
+    const existingIdx = inMemoryStore.products.findIndex((p) => p.id === id);
+    if (existingIdx >= 0) {
+      const updated = {
+        ...inMemoryStore.products[existingIdx],
+        name: params[0],
+        subtitle: params[1],
+        collection: params[2],
+        tagline: params[3],
+        pricePHP: Number(params[4]),
+        edition: params[5],
+        batchRemaining: Number(params[6]),
+        stockStatus: params[7],
+        leadTime: params[8],
+        region: params[9],
+        artisanCooperative: params[10],
+        artisanMaster: params[11],
+        fairTradePercentage: Number(params[12]),
+        has3DModel: Boolean(params[13]),
+        modelType: params[14],
+        modelGlbUrl: params[15],
+        image: params[16],
+        description: params[17],
+        specs: typeof params[18] === 'string' ? JSON.parse(params[18] || '[]') : params[18],
+        materials: typeof params[19] === 'string' ? JSON.parse(params[19] || '[]') : params[19],
+        updated_at: new Date(),
+      };
+      inMemoryStore.products[existingIdx] = updated;
+      return { rows: [updated], rowCount: 1 };
+    }
+    return { rows: [], rowCount: 0 };
+  }
+
+  // 12. DELETE from products
+  if (normalized.startsWith('delete from products where id =')) {
+    const id = params[0];
+    const initialLen = inMemoryStore.products.length;
+    inMemoryStore.products = inMemoryStore.products.filter((p) => p.id !== id);
+    return { rows: [], rowCount: initialLen - inMemoryStore.products.length };
   }
 
   // Default fallback

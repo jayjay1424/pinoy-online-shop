@@ -80,6 +80,18 @@ export function CatalogGrid({
                   )}
                 </div>
 
+                {/* Visual Image Asset (PNG / JPG preview) */}
+                {p.image && (
+                  <div className="w-full h-44 rounded-2xl overflow-hidden mb-3 border border-[#5C3A21]/15 relative group-hover:border-[#5C3A21]/30 transition-all bg-[#FAF8F5]">
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+                  </div>
+                )}
+
                 {/* Product Title & Subtitle */}
                 <h3 className="font-serif text-2xl font-semibold text-[#24140E] group-hover:text-[#5C3A21] transition-colors leading-tight mb-1">
                   {p.name}
@@ -107,7 +119,13 @@ export function CatalogGrid({
                     {rateInfo.symbol} {convertedPrice.toLocaleString()}
                   </span>
                   <span className="text-[10px] text-[#8C5A3C] block font-serif">
-                    {p.batchRemaining ? `Only ${p.batchRemaining} left` : 'Custom commission'}
+                    {p.stockStatus === 'archived' || p.batchRemaining === 0
+                      ? 'Archived / Sold Out'
+                      : p.stockStatus === 'commission'
+                      ? 'Bespoke Commission'
+                      : p.batchRemaining
+                      ? `Only ${p.batchRemaining} left`
+                      : 'Bespoke piece'}
                   </span>
                 </div>
 
@@ -127,14 +145,25 @@ export function CatalogGrid({
                   )}
 
                   <button
+                    disabled={p.stockStatus === 'archived' || p.batchRemaining === 0}
                     onClick={() => {
                       sound.playWoodThud();
                       onQuickAddToCart(p, convertedPrice, activeCurrency);
                     }}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold bg-[#5C3A21] text-white hover:bg-[#432916] active:scale-95 transition-all shadow-xs"
+                    className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all shadow-xs ${
+                      p.stockStatus === 'archived' || p.batchRemaining === 0
+                        ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                        : 'bg-[#5C3A21] text-white hover:bg-[#432916] active:scale-95'
+                    }`}
                   >
                     <ShoppingBag className="w-3.5 h-3.5 text-[#C4975D]" />
-                    <span>Acquire</span>
+                    <span>
+                      {p.stockStatus === 'archived' || p.batchRemaining === 0
+                        ? 'Sold Out'
+                        : p.stockStatus === 'commission'
+                        ? 'Commission'
+                        : 'Acquire'}
+                    </span>
                   </button>
                 </div>
               </div>

@@ -48,9 +48,39 @@ CREATE TABLE IF NOT EXISTS orders (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 4. Products Table (Atelier Heritage Collection & Admin Inventory)
+CREATE TABLE IF NOT EXISTS products (
+    id VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    subtitle TEXT,
+    collection VARCHAR(100) NOT NULL,
+    tagline TEXT,
+    price_php NUMERIC(12, 2) NOT NULL,
+    edition VARCHAR(150),
+    batch_remaining INTEGER DEFAULT 3,
+    stock_status VARCHAR(50) DEFAULT 'available',
+    lead_time VARCHAR(150),
+    region VARCHAR(150),
+    artisan_cooperative VARCHAR(255),
+    artisan_master VARCHAR(255),
+    fair_trade_percentage INTEGER DEFAULT 45,
+    has_3d_model BOOLEAN DEFAULT false,
+    model_type VARCHAR(100),
+    model_glb_url TEXT,
+    image TEXT,
+    description TEXT,
+    specs JSONB,
+    materials JSONB,
+    camera_presets JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Security & Fast-Lookup Indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
 CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
+CREATE INDEX IF NOT EXISTS idx_products_collection ON products(collection);
+CREATE INDEX IF NOT EXISTS idx_products_stock_status ON products(stock_status);
 
