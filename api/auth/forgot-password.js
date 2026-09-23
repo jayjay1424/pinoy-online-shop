@@ -1,16 +1,22 @@
 import { query } from '../_lib/db.js';
-import { hashPassword } from '../_lib/security.js';
+import { hashPassword, setSecurityHeaders, checkRateLimit, sanitizeInput } from '../_lib/security.js';
 
 // In-memory verification cache for dispatched reset codes with 15-minute expiry
 const resetTokens = new Map();
 
 export default async function handler(req, res) {
+  setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Rate limit: 5 password reset requests per 15 minutes per IP
+  if (!checkRateLimit(req, res, { maxAttempts: 5, windowMs: 15 * 60 * 1000, keyPrefix: 'auth_reset' })) {
+    return;
   }
 
   if (req.method !== 'POST') {
@@ -24,7 +30,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email address is required.' });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedEmail = sanitizeInput(email).toLowerCase();
 
     // Check if user exists
     const userRes = await query('SELECT id FROM users WHERE email = $1', [trimmedEmail]);

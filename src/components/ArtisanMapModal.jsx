@@ -60,10 +60,31 @@ export function ArtisanMapModal({ isOpen, onClose }) {
     }
   ];
 
+  // Escape key dismiss
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        sound.playWoodThud();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const active = REGIONS[selectedRegion];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#24140E]/70 backdrop-blur-md flex items-center justify-center p-4 select-none animate-fadeIn">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          sound.playWoodThud();
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 overflow-y-auto bg-[#24140E]/70 backdrop-blur-md flex items-center justify-center p-4 select-none animate-fadeIn"
+    >
       <div className="relative w-full max-w-3xl bg-[#FAF8F5] rounded-3xl border border-[#5C3A21]/20 shadow-warm-lg overflow-hidden flex flex-col md:flex-row">
         
         {/* Close Button */}

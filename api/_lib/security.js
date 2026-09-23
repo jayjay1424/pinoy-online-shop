@@ -88,3 +88,86 @@ export function sanitizeUser(user) {
   return safeUser;
 }
 
+/**
+ * Apply mandatory enterprise security headers
+ * @param {object} res 
+ */
+export function setSecurityHeaders(res) {
+  if (!res || !res.setHeader) return;
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+}
+
+// In-memory sliding rate limit store (keyed by prefix:ip)
+const ipRateLimitStore = new Map();
+
+/**
+ * Differentiated sliding-window rate limiter for serverless endpoints
+ * @param {object} req 
+ * @param {object} res 
+ * @param {object} options 
+ * @returns {boolean} true if allowed, false if rate limited (429 response automatically sent)
+ */
+export function checkRateLimit(req, res, { maxAttempts = 15, windowMs = 15 * 60 * 1000, keyPrefix = 'api' } = {}) {
+  const headers = req?.headers || {};
+  const forwarded = headers['x-forwarded-for'];
+  const ip = (forwarded ? forwarded.split(',')[0].trim() : req?.socket?.remoteAddress) || '127.0.0.1';
+  const key = `${keyPrefix}:${ip}`;
+  const now = Date.now();
+  const record = ipRateLimitStore.get(key) || { count: 0, resetTime: now + windowMs };
+
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + windowMs;
+  } else {
+    record.count += 1;
+  }
+
+  ipRateLimitStore.set(key, record);
+
+  // Periodic pruning of stale records
+  if (ipRateLimitStore.size > 2000) {
+    for (const [k, v] of ipRateLimitStore.entries()) {
+      if (now > v.resetTime) ipRateLimitStore.delete(k);
+    }
+  }
+
+  if (res && res.setHeader) {
+    res.setHeader('X-RateLimit-Limit', maxAttempts.toString());
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, maxAttempts - record.count).toString());
+    res.setHeader('X-RateLimit-Reset', Math.ceil(record.resetTime / 1000).toString());
+  }
+
+  if (record.count > maxAttempts) {
+    const retryAfterSec = Math.max(1, Math.ceil((record.resetTime - now) / 1000));
+    if (res && res.setHeader) {
+      res.setHeader('Retry-After', retryAfterSec.toString());
+    }
+    if (res && res.status) {
+      res.status(429).json({
+        error: `Security Protocol: Too many requests. Please wait ${retryAfterSec} seconds before retrying.`,
+        retryAfter: retryAfterSec,
+      });
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Sanitize text inputs against XSS and control characters
+ * @param {string} input 
+ * @returns {string}
+ */
+export function sanitizeInput(input) {
+  if (typeof input !== 'string') return input;
+  return input
+    .replace(/[<>]/g, '') // strip raw script tags / angle brackets
+    .trim();
+}
+
+

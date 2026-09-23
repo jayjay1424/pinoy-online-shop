@@ -1,13 +1,19 @@
 import { query } from './_lib/db.js';
-import { getAuthUser } from './_lib/security.js';
+import { getAuthUser, setSecurityHeaders, checkRateLimit, sanitizeInput } from './_lib/security.js';
 
 export default async function handler(req, res) {
+  setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Rate limit: 60 requests per 15 minutes per IP
+  if (!checkRateLimit(req, res, { maxAttempts: 60, windowMs: 15 * 60 * 1000, keyPrefix: 'orders' })) {
+    return;
   }
 
   const auth = getAuthUser(req);

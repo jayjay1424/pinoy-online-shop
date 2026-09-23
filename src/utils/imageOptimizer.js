@@ -51,3 +51,4 @@ export function optimizeImage(file, maxWidth = 1200, maxHeight = 1200, quality =
     reader.readAsDataURL(file);
   });
 }
+

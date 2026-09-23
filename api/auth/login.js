@@ -1,13 +1,19 @@
 import { query } from '../_lib/db.js';
-import { comparePassword, generateToken, sanitizeUser } from '../_lib/security.js';
+import { comparePassword, generateToken, sanitizeUser, setSecurityHeaders, checkRateLimit, sanitizeInput } from '../_lib/security.js';
 
 export default async function handler(req, res) {
+  setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Strict rate limit: 10 attempts per 15 minutes per IP
+  if (!checkRateLimit(req, res, { maxAttempts: 10, windowMs: 15 * 60 * 1000, keyPrefix: 'auth_login' })) {
+    return;
   }
 
   if (req.method !== 'POST') {
@@ -21,7 +27,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedEmail = sanitizeInput(email).toLowerCase();
 
     // Query patron record by email
     const userRes = await query('SELECT * FROM users WHERE email = $1', [trimmedEmail]);

@@ -83,12 +83,25 @@ export function AccountModal({ isOpen, onClose }) {
     setNewPostal('');
   };
 
+  // Escape key dismiss
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        sound.playWoodThud();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleChangePassword = (e) => {
     e.preventDefault();
     setSecurityError('');
     setSecurityMsg('');
 
-    if (currentPass !== currentUser.password) {
+    if (currentUser.password && currentPass && currentPass !== currentUser.password) {
       setSecurityError('Current password is incorrect.');
       return;
     }
@@ -117,7 +130,15 @@ export function AccountModal({ isOpen, onClose }) {
   const addresses = currentUser.savedAddresses || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          sound.playWoodThud();
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-sm animate-fadeIn"
+    >
       <div className="relative w-full max-w-2xl bg-[#FAF8F5] rounded-3xl shadow-warm-lg border border-[#5C3A21]/20 overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* VIP Client Header */}

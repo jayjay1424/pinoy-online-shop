@@ -1,6 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { sound } from '../utils/sound';
 
 export function Footer() {
+  const [gazetteEmail, setGazetteEmail] = useState('');
+  const [gazetteSubscribed, setGazetteSubscribed] = useState(false);
+
+  const handleGazetteSubmit = (e) => {
+    e.preventDefault();
+    if (!gazetteEmail || !gazetteEmail.includes('@')) return;
+    sound.playSuccessChime();
+    setGazetteSubscribed(true);
+    setGazetteEmail('');
+    setTimeout(() => setGazetteSubscribed(false), 4000);
+  };
   return (
     <footer className="bg-[#FAF8F5] border-t border-[#5C3A21]/15 pt-16 pb-12 px-4 sm:px-8 text-xs text-[#6E5D53]">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
@@ -54,16 +66,28 @@ export function Footer() {
           <p className="text-[11px] text-[#6E5D53] mb-3">
             Receive private invitations to limited harvest drops and master weaver documentaries.
           </p>
-          <div className="flex items-center gap-1.5">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="w-full px-3 py-1.5 text-xs bg-white border border-[#5C3A21]/20 rounded-lg text-[#24140E] focus:outline-none focus:ring-1 focus:ring-[#5C3A21]"
-            />
-            <button className="px-3 py-1.5 rounded-lg bg-[#5C3A21] text-white font-semibold text-xs hover:bg-[#432916] transition-all shrink-0">
-              Join
-            </button>
-          </div>
+          {gazetteSubscribed ? (
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300/80 text-[11px] text-amber-950 font-medium animate-fadeIn">
+              ✓ Salamat! You are enrolled in the Atelier Gazette.
+            </div>
+          ) : (
+            <form onSubmit={handleGazetteSubmit} className="flex items-center gap-1.5">
+              <input
+                type="email"
+                value={gazetteEmail}
+                onChange={(e) => setGazetteEmail(e.target.value)}
+                placeholder="Your email address"
+                required
+                className="w-full px-3 py-1.5 text-xs bg-white border border-[#5C3A21]/20 rounded-lg text-[#24140E] focus:outline-none focus:ring-1 focus:ring-[#5C3A21]"
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-1.5 rounded-lg bg-[#5C3A21] text-white font-semibold text-xs hover:bg-[#432916] transition-all shrink-0 shadow-xs"
+              >
+                Join
+              </button>
+            </form>
+          )}
         </div>
 
       </div>

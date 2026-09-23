@@ -9,15 +9,42 @@ import { StorySection } from './components/StorySection';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
-import { UnboxingModal } from './components/UnboxingModal';
-import { ArtisanMapModal } from './components/ArtisanMapModal';
-import { ConciergeModal } from './components/ConciergeModal';
-import { AuthModal } from './components/AuthModal';
-import { AccountModal } from './components/AccountModal';
-import { CuratorStudioPage } from './pages/CuratorStudioPage';
 import { normalizeProduct } from './utils/productUtils';
 import { useAuth } from './context/AuthContext';
 import { sound } from './utils/sound';
+
+// Lazy load heavy admin portal and secondary modals for ultra-fast initial load
+const CuratorStudioPage = React.lazy(() =>
+  import('./pages/CuratorStudioPage').then((m) => ({ default: m.CuratorStudioPage }))
+);
+const UnboxingModal = React.lazy(() =>
+  import('./components/UnboxingModal').then((m) => ({ default: m.UnboxingModal }))
+);
+const ArtisanMapModal = React.lazy(() =>
+  import('./components/ArtisanMapModal').then((m) => ({ default: m.ArtisanMapModal }))
+);
+const ConciergeModal = React.lazy(() =>
+  import('./components/ConciergeModal').then((m) => ({ default: m.ConciergeModal }))
+);
+const AuthModal = React.lazy(() =>
+  import('./components/AuthModal').then((m) => ({ default: m.AuthModal }))
+);
+const AccountModal = React.lazy(() =>
+  import('./components/AccountModal').then((m) => ({ default: m.AccountModal }))
+);
+
+function AtelierLoadingChamber() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#24140E]/60 backdrop-blur-sm animate-fadeIn">
+      <div className="p-6 rounded-3xl bg-[#FAF8F5] border border-[#C4975D]/40 text-center shadow-warm flex flex-col items-center">
+        <div className="w-9 h-9 rounded-full border-2 border-[#FAF8F5] border-t-[#C4975D] animate-spin mb-3" />
+        <span className="text-[10px] uppercase tracking-widest font-bold text-[#8C5A3C]">
+          Likha Atelier • Accessing Vault Chamber
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function App() {
   const { isAuthenticated } = useAuth();
@@ -299,14 +326,16 @@ export function App() {
   // If user accesses the hidden /admin or /curator route, render the dedicated Curator Studio Portal
   if (currentPath === '/admin') {
     return (
-      <CuratorStudioPage
-        products={products}
-        onCreateProduct={handleCreateProduct}
-        onUpdateProduct={handleUpdateProduct}
-        onDeleteProduct={handleDeleteProduct}
-        onNavigateToStorefront={navigateToStorefront}
-        activeCurrency={activeCurrency}
-      />
+      <React.Suspense fallback={<AtelierLoadingChamber />}>
+        <CuratorStudioPage
+          products={products}
+          onCreateProduct={handleCreateProduct}
+          onUpdateProduct={handleUpdateProduct}
+          onDeleteProduct={handleDeleteProduct}
+          onNavigateToStorefront={navigateToStorefront}
+          activeCurrency={activeCurrency}
+        />
+      </React.Suspense>
     );
   }
 
@@ -414,42 +443,54 @@ export function App() {
         }}
       />
 
-      <UnboxingModal
-        isOpen={isUnboxingOpen}
-        onClose={() => setIsUnboxingOpen(false)}
-      />
+      <React.Suspense fallback={null}>
+        {isUnboxingOpen && (
+          <UnboxingModal
+            isOpen={isUnboxingOpen}
+            onClose={() => setIsUnboxingOpen(false)}
+          />
+        )}
 
-      <ArtisanMapModal
-        isOpen={isMapOpen}
-        onClose={() => setIsMapOpen(false)}
-      />
+        {isMapOpen && (
+          <ArtisanMapModal
+            isOpen={isMapOpen}
+            onClose={() => setIsMapOpen(false)}
+          />
+        )}
 
-      <ConciergeModal
-        isOpen={isConciergeOpen}
-        onClose={() => setIsConciergeOpen(false)}
-      />
+        {isConciergeOpen && (
+          <ConciergeModal
+            isOpen={isConciergeOpen}
+            onClose={() => setIsConciergeOpen(false)}
+          />
+        )}
 
-      <AuthModal
-        isOpen={isAuthOpen}
-        onClose={() => {
-          setIsAuthOpen(false);
-          setAuthNotice('');
-        }}
-        notice={authNotice}
-        onSuccess={() => {
-          if (pendingCheckoutPackaging) {
-            setCheckoutPackaging(pendingCheckoutPackaging);
-            setPendingCheckoutPackaging(null);
-            setAuthNotice('');
-            setIsCheckoutOpen(true);
-          }
-        }}
-      />
+        {isAuthOpen && (
+          <AuthModal
+            isOpen={isAuthOpen}
+            onClose={() => {
+              setIsAuthOpen(false);
+              setAuthNotice('');
+            }}
+            notice={authNotice}
+            onSuccess={() => {
+              if (pendingCheckoutPackaging) {
+                setCheckoutPackaging(pendingCheckoutPackaging);
+                setPendingCheckoutPackaging(null);
+                setAuthNotice('');
+                setIsCheckoutOpen(true);
+              }
+            }}
+          />
+        )}
 
-      <AccountModal
-        isOpen={isAccountOpen}
-        onClose={() => setIsAccountOpen(false)}
-      />
+        {isAccountOpen && (
+          <AccountModal
+            isOpen={isAccountOpen}
+            onClose={() => setIsAccountOpen(false)}
+          />
+        )}
+      </React.Suspense>
 
     </div>
   );

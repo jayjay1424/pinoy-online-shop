@@ -1,5 +1,5 @@
 import { query } from './_lib/db.js';
-import { getAuthUser } from './_lib/security.js';
+import { getAuthUser, setSecurityHeaders, checkRateLimit, sanitizeInput } from './_lib/security.js';
 
 function mapProductRow(p) {
   if (!p) return null;
@@ -78,12 +78,18 @@ function mapProductRow(p) {
 }
 
 export default async function handler(req, res) {
+  setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Rate limit: 120 product catalog requests per 15 minutes per IP
+  if (!checkRateLimit(req, res, { maxAttempts: 120, windowMs: 15 * 60 * 1000, keyPrefix: 'products' })) {
+    return;
   }
 
   try {

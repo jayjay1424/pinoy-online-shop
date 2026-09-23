@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Volume2, VolumeX, MapPin, Globe, Sparkles, Calendar, User, UserCheck } from 'lucide-react';
+import { ShoppingBag, Volume2, VolumeX, MapPin, Globe, Sparkles, Calendar, User, UserCheck, Menu, X } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +19,7 @@ export function Navbar({
   const { currentUser, isAuthenticated } = useAuth();
   const [audioActive, setAudioActive] = useState(sound.enabled);
   const [currencyDropdown, setCurrencyDropdown] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleSound = () => {
     const newState = sound.toggle();
@@ -209,9 +210,92 @@ export function Navbar({
                 </span>
               )}
             </button>
+
+            {/* Mobile Hamburger Menu Toggle */}
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                setIsMobileMenuOpen(!isMobileMenuOpen);
+              }}
+              className="md:hidden p-2 rounded-full border border-[#5C3A21]/20 text-[#5C3A21] hover:bg-[#FAF8F5] transition-all"
+              aria-label="Toggle Navigation Menu"
+            >
+              {isMobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
           </div>
 
         </div>
+
+        {/* Mobile Dropdown Navigation Drawer */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden mt-2 max-w-7xl mx-auto glass-panel rounded-3xl p-5 border border-[#5C3A21]/20 shadow-warm-lg animate-fadeIn text-xs space-y-3">
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                setIsMobileMenuOpen(false);
+                if (onSelectTerno) onSelectTerno();
+              }}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-50 border border-amber-300/80 text-amber-950 font-bold"
+            >
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600 animate-spin" style={{ animationDuration: '6s' }} />
+                <span>3D Modern Terno (Barong for Woman)</span>
+              </div>
+              <span className="text-[10px] uppercase font-mono tracking-wider text-amber-800">Featured</span>
+            </button>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 font-medium text-[#5C3A21]">
+              <a
+                href="#stage"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-3 rounded-2xl bg-white border border-[#5C3A21]/15 text-center hover:bg-[#FAF8F5] transition-all"
+              >
+                The 3D Stage
+              </a>
+              <a
+                href="#catalog"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-3 rounded-2xl bg-white border border-[#5C3A21]/15 text-center hover:bg-[#FAF8F5] transition-all"
+              >
+                Heritage Catalog
+              </a>
+              <button
+                onClick={() => {
+                  sound.playBrassClick();
+                  setIsMobileMenuOpen(false);
+                  onOpenMap();
+                }}
+                className="p-3 rounded-2xl bg-white border border-[#5C3A21]/15 text-center hover:bg-[#FAF8F5] transition-all flex items-center justify-center gap-1.5"
+              >
+                <MapPin className="w-3.5 h-3.5 text-[#8C5A3C]" />
+                <span>Ang Arkipelago</span>
+              </button>
+              <button
+                onClick={() => {
+                  sound.playBrassClick();
+                  setIsMobileMenuOpen(false);
+                  onOpenUnboxing();
+                }}
+                className="p-3 rounded-2xl bg-white border border-[#5C3A21]/15 text-center hover:bg-[#FAF8F5] transition-all flex items-center justify-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#C4975D]" />
+                <span>Unboxing Ritual</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                setIsMobileMenuOpen(false);
+                if (onOpenConcierge) onOpenConcierge();
+              }}
+              className="w-full p-3 rounded-2xl bg-[#5C3A21] text-white font-semibold text-center hover:bg-[#432916] transition-all flex items-center justify-center gap-2 shadow-xs"
+            >
+              <Calendar className="w-4 h-4 text-[#C4975D]" />
+              <span>Book Private Salon Viewing</span>
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

@@ -98,3 +98,4 @@ export function normalizeProduct(p) {
     camera_presets: cameraPresets,
   };
 }
+

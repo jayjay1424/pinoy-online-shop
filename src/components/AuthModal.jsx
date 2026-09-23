@@ -175,9 +175,29 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login', notice = '', 
       setIsLoading(false);
     }
   };
+  // Escape key dismiss
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        sound.playBrassClick();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          sound.playBrassClick();
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn"
+    >
       <div className="relative w-full max-w-md bg-[#FAF8F5] rounded-3xl shadow-warm-lg border border-[#5C3A21]/20 overflow-hidden flex flex-col">
         
         {/* Header Ribbon */}

@@ -1,13 +1,19 @@
 import { query } from '../_lib/db.js';
-import { getAuthUser, hashPassword, sanitizeUser } from '../_lib/security.js';
+import { getAuthUser, hashPassword, sanitizeUser, setSecurityHeaders, checkRateLimit, sanitizeInput } from '../_lib/security.js';
 
 export default async function handler(req, res) {
+  setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Rate limit: 30 profile updates per 15 minutes per IP
+  if (!checkRateLimit(req, res, { maxAttempts: 30, windowMs: 15 * 60 * 1000, keyPrefix: 'profile' })) {
+    return;
   }
 
   if (req.method !== 'PUT') {
@@ -39,7 +45,7 @@ export default async function handler(req, res) {
     if (name) {
       await query(
         'UPDATE users SET name = $1, phone = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
-        [name.trim(), phone?.trim() || '', auth.id]
+        [sanitizeInput(name), sanitizeInput(phone || ''), auth.id]
       );
     }
 
