@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Volume2, VolumeX, MapPin, Globe, Sparkles, Calendar, User, UserCheck, ShieldCheck } from 'lucide-react';
+import { ShoppingBag, Volume2, VolumeX, MapPin, Globe, Sparkles, Calendar, User, UserCheck } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,6 @@ export function Navbar({
   onSelectTerno,
   onOpenAuth,
   onOpenAccount,
-  onOpenAdmin,
   activeCurrency,
   onCurrencyChange,
 }) {
@@ -51,18 +50,6 @@ export function Navbar({
           className="text-[#C4975D] underline font-sans hover:text-white transition-colors hidden sm:inline"
         >
           Book Salon Viewing
-        </button>
-        <span>•</span>
-        <button
-          onClick={() => {
-            sound.playBrassClick();
-            if (onOpenAdmin) onOpenAdmin();
-          }}
-          className="text-[#C4975D] hover:text-[#EAD7B2] font-mono transition-colors flex items-center gap-1"
-          title="Open Curator Studio (Admin Catalog CRUD)"
-        >
-          <ShieldCheck className="w-3 h-3 text-[#C4975D]" />
-          <span>CURATOR STUDIO</span>
         </button>
       </div>
 
@@ -109,29 +96,11 @@ export function Navbar({
               <Calendar className="w-3.5 h-3.5 text-[#8C5A3C]" />
               Private Concierge
             </button>
-            <button
-              onClick={() => { sound.playBrassClick(); if (onOpenAdmin) onOpenAdmin(); }}
-              className="flex items-center gap-1 text-amber-900 hover:text-[#24140E] transition-colors py-1 font-semibold"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-              Curator
-            </button>
           </nav>
 
           {/* Right Action Cluster */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* Curator Studio Trigger (Always Accessible) */}
-            <button
-              onClick={() => { sound.playBrassClick(); if (onOpenAdmin) onOpenAdmin(); }}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold text-[#FAF8F5] bg-gradient-to-r from-[#24140E] via-[#381F12] to-[#5C3A21] border border-[#C4975D]/40 hover:border-[#C4975D] hover:scale-[1.02] active:scale-95 transition-all shadow-xs group"
-              title="Curator Studio: Manage Catalog, 3D Assets, Provenance & Pricing"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#C4975D] group-hover:scale-110 transition-transform" />
-              <span className="hidden sm:inline">Curator Studio</span>
-              <span className="sm:hidden font-mono text-[10px] text-[#EAD7B2]">ADMIN</span>
-            </button>
-
             {/* Virtual Unboxing Trigger */}
             <button
               onClick={() => { sound.playBrassClick(); onOpenUnboxing(); }}

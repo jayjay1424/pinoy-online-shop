@@ -14,12 +14,70 @@ import { ArtisanMapModal } from './components/ArtisanMapModal';
 import { ConciergeModal } from './components/ConciergeModal';
 import { AuthModal } from './components/AuthModal';
 import { AccountModal } from './components/AccountModal';
-import { AdminModal } from './components/AdminModal';
+import { CuratorStudioPage } from './pages/CuratorStudioPage';
 import { useAuth } from './context/AuthContext';
 import { sound } from './utils/sound';
 
 export function App() {
   const { isAuthenticated } = useAuth();
+
+  // Hidden Route detection (/admin or /curator or #/admin)
+  const [currentPath, setCurrentPath] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (pathname.startsWith('/admin') || pathname.startsWith('/curator') || hash.startsWith('#/admin')) {
+        return '/admin';
+      }
+    }
+    return '/';
+  });
+
+  // Client-side Navigation
+  const navigateToStorefront = () => {
+    window.history.pushState({}, '', '/');
+    setCurrentPath('/');
+  };
+
+  const navigateToAdmin = () => {
+    window.history.pushState({}, '', '/admin');
+    setCurrentPath('/admin');
+  };
+
+  // Route event listener & discreet owner shortcut (Ctrl+Shift+A or Alt+A)
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const pathname = window.location.pathname.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (pathname.startsWith('/admin') || pathname.startsWith('/curator') || hash.startsWith('#/admin')) {
+        setCurrentPath('/admin');
+      } else {
+        setCurrentPath('/');
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      // Secret key combination for owner: Ctrl+Shift+A or Alt+A toggles between Admin and Storefront
+      if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') || (e.altKey && e.key.toLowerCase() === 'a')) {
+        e.preventDefault();
+        if (window.location.pathname.toLowerCase().startsWith('/admin')) {
+          navigateToStorefront();
+        } else {
+          navigateToAdmin();
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Dynamic catalog state with localStorage persistence and API sync
   const [products, setProducts] = useState(() => {
@@ -65,7 +123,6 @@ export function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authNotice, setAuthNotice] = useState('');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Sync with PostgreSQL / Serverless API on mount if available
   useEffect(() => {
@@ -212,17 +269,30 @@ export function App() {
     }
   };
 
+  // If user accesses the hidden /admin or /curator route, render the dedicated Curator Studio Portal
+  if (currentPath === '/admin') {
+    return (
+      <CuratorStudioPage
+        products={products}
+        onCreateProduct={handleCreateProduct}
+        onUpdateProduct={handleUpdateProduct}
+        onDeleteProduct={handleDeleteProduct}
+        onNavigateToStorefront={navigateToStorefront}
+        activeCurrency={activeCurrency}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#24140E] font-sans antialiased flex flex-col justify-between">
       
-      {/* Floating Liquid Glass Navigation with Top Prestige Ticker */}
+      {/* Floating Liquid Glass Navigation with Top Prestige Ticker (Customer Storefront) */}
       <Navbar
         cartCount={cart.length}
         onOpenCart={() => setIsCartOpen(true)}
         onOpenMap={() => setIsMapOpen(true)}
         onOpenUnboxing={() => setIsUnboxingOpen(true)}
         onOpenConcierge={() => setIsConciergeOpen(true)}
-        onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenAuth={(notice) => {
           setAuthNotice(notice || '');
           setIsAuthOpen(true);
@@ -352,21 +422,6 @@ export function App() {
       <AccountModal
         isOpen={isAccountOpen}
         onClose={() => setIsAccountOpen(false)}
-      />
-
-      {/* Curator Studio (Admin Catalog CRUD Portal) */}
-      <AdminModal
-        isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
-        products={products}
-        onCreateProduct={handleCreateProduct}
-        onUpdateProduct={handleUpdateProduct}
-        onDeleteProduct={handleDeleteProduct}
-        onSelectForStage={(prod) => {
-          handleSelectProduct(prod);
-          document.getElementById('stage')?.scrollIntoView({ behavior: 'smooth' });
-        }}
-        activeCurrency={activeCurrency}
       />
 
     </div>
