@@ -263,6 +263,88 @@ export async function initDatabase() {
       );
     }
 
+    // Seed default heritage products if table is empty or missing any default masterworks
+    const prodCountRes = await client.query('SELECT count(*) as count FROM products');
+    const existingCount = Number(prodCountRes.rows[0]?.count || 0);
+    if (existingCount === 0) {
+      for (const p of PRODUCTS) {
+        await client.query(
+          `INSERT INTO products (
+            id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
+            stock_status, lead_time, region, artisan_cooperative, artisan_master,
+            fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
+            description, specs, materials, camera_presets
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+          ON CONFLICT (id) DO NOTHING`,
+          [
+            p.id,
+            p.name,
+            p.subtitle || '',
+            p.collection || 'Kasuotan & Sutla',
+            p.tagline || '',
+            p.pricePHP || 45000,
+            p.edition || 'Edisyon Limitado',
+            p.batchRemaining ?? 3,
+            p.stockStatus || 'available',
+            p.leadTime || 'Handcrafted',
+            p.region || 'Philippines',
+            p.artisanCooperative || 'Artisan Cooperative',
+            p.artisanMaster || 'Master Artisan',
+            p.fairTradePercentage ?? 45,
+            p.has3DModel ?? false,
+            p.modelType || 'bayong',
+            p.modelGlbUrl || '',
+            p.image || '',
+            p.description || '',
+            JSON.stringify(p.specs || []),
+            JSON.stringify(p.materials || []),
+            JSON.stringify(p.cameraPresets || []),
+          ]
+        );
+      }
+    } else {
+      // Ensure barong-ilustrado is specifically present
+      const barongCheck = await client.query('SELECT id FROM products WHERE id = $1', ['barong-ilustrado']);
+      if (barongCheck.rows.length === 0) {
+        const p = PRODUCTS.find((x) => x.id === 'barong-ilustrado');
+        if (p) {
+          await client.query(
+            `INSERT INTO products (
+              id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
+              stock_status, lead_time, region, artisan_cooperative, artisan_master,
+              fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
+              description, specs, materials, camera_presets
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+            ON CONFLICT (id) DO NOTHING`,
+            [
+              p.id,
+              p.name,
+              p.subtitle || '',
+              p.collection || 'Kasuotan & Sutla',
+              p.tagline || '',
+              p.pricePHP || 45000,
+              p.edition || 'Edisyon Limitado',
+              p.batchRemaining ?? 3,
+              p.stockStatus || 'available',
+              p.leadTime || 'Handcrafted',
+              p.region || 'Philippines',
+              p.artisanCooperative || 'Artisan Cooperative',
+              p.artisanMaster || 'Master Artisan',
+              p.fairTradePercentage ?? 45,
+              p.has3DModel ?? false,
+              p.modelType || 'bayong',
+              p.modelGlbUrl || '',
+              p.image || '',
+              p.description || '',
+              JSON.stringify(p.specs || []),
+              JSON.stringify(p.materials || []),
+              JSON.stringify(p.cameraPresets || []),
+            ]
+          );
+        }
+      }
+    }
+
     isInitialized = true;
   } catch (err) {
     console.error('[PostgreSQL Init Schema Error]:', err.message);

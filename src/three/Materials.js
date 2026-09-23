@@ -1208,4 +1208,33 @@ export const MaterialsFactory = {
       side: THREE.BackSide,
     });
   },
+
+  // 15. Palawan Mother-of-Pearl (Madreperla) Iridescent Button Material
+  createMotherOfPearlButtonMaterial(colorHex = '#FFFDF5') {
+    return new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color(colorHex),
+      roughness: 0.12,
+      metalness: 0.08,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05,
+      iridescence: 0.88,
+      iridescenceIOR: 1.34,
+      iridescenceThicknessRange: [100, 340],
+      sheen: 0.85,
+      sheenColor: new THREE.Color('#FFF5E6'),
+      sheenRoughness: 0.10,
+      reflectivity: 0.95,
+      side: THREE.FrontSide,
+    });
+  },
+
+  // 16. Heritage Camisa de Chino Supima Cotton Undershirt Material
+  createCamisaDeChinoMaterial(colorHex = '#FAF9F5') {
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(colorHex),
+      roughness: 0.86,
+      metalness: 0.01,
+      side: THREE.DoubleSide,
+    });
+  },
 };
