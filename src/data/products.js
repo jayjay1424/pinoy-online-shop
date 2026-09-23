@@ -347,6 +347,7 @@ export const PRODUCTS = [
     fairTradePercentage: 48,
     has3DModel: true,
     modelType: 'barong-men',
+    image: '/textures/barong_source.png',
     description: 'An authentic Philippine formal masterpiece tailored for gentlemen. Woven from gossamer-sheer handloom Piña-Seda (red Spanish pineapple fiber and mulberry silk), featuring the iconic U-shaped Lumban Calado chest Pechera embroidery shield, architectural Mandarin standing collar, iridescent Palawan Mother-of-Pearl (Madreperla) buttons, and dual side vents (bolas) for an impeccable tailored drape over formal trousers.',
     specs: [
       { label: 'Silweta / Silhouette', value: 'Masculine tailored straight cut with dual reinforced side vents (bolas)' },

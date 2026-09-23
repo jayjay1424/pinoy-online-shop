@@ -44,6 +44,8 @@ export function ProductCarousel({
       case 'bayong':
         return <ShoppingBag className="w-3.5 h-3.5 text-[#C4975D]" />;
       case 'barong':
+      case 'barong-men':
+      case 'ilustrado':
       case 'dalisay':
       case 'terno':
       case 'trench':
