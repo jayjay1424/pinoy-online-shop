@@ -1,5 +1,5 @@
-import { query } from '../lib/db.js';
-import { getAuthUser } from '../lib/security.js';
+import { query } from '../_lib/db.js';
+import { getAuthUser } from '../_lib/security.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

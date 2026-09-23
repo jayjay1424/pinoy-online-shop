@@ -1,5 +1,5 @@
-import { query } from '../lib/db.js';
-import { hashPassword } from '../lib/security.js';
+import { query } from '../_lib/db.js';
+import { hashPassword } from '../_lib/security.js';
 
 // In-memory verification cache for dispatched reset codes with 15-minute expiry
 const resetTokens = new Map();
