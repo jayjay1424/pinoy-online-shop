@@ -77,6 +77,16 @@ export function createBarongMenModel(
   const cUvs = [];
   const cIndices = [];
 
+// Continuous superellipse formula from 3d-modeling-mastery skill (n ~ 3.2 for bespoke tailored drapes)
+function evaluateSuperellipse(theta, a, b, n = 3.2) {
+  const cosT = Math.cos(theta);
+  const sinT = Math.sin(theta);
+  const exp = 2 / n;
+  const x = a * Math.sign(cosT) * Math.pow(Math.abs(cosT), exp);
+  const z = b * Math.sign(sinT) * Math.pow(Math.abs(sinT), exp);
+  return { x, z };
+}
+
   for (let j = 0; j <= numCamisaV; j++) {
     const v = j / numCamisaV;
     const y = 0.06 + v * camisaH;
@@ -104,8 +114,9 @@ export function createBarongMenModel(
       const u = i / numCamisaU;
       const theta = u * Math.PI * 2;
 
-      let x = Math.cos(theta) * rx;
-      let z = Math.sin(theta) * rz;
+      const pt = evaluateSuperellipse(theta, rx, rz, 3.2);
+      let x = pt.x;
+      let z = pt.z;
       let yPos = y;
 
       // Front crew-neck scooped dip
@@ -189,8 +200,9 @@ export function createBarongMenModel(
       const u = i / numU;
       const theta = u * Math.PI * 2;
 
-      let x = Math.cos(theta) * rx;
-      let z = Math.sin(theta) * rz;
+      const pt = evaluateSuperellipse(theta, rx, rz, 3.2);
+      let x = pt.x;
+      let z = pt.z;
 
       // Realistic chest outward curve
       if (v >= 0.58 && v <= 0.88 && z > 0) {
