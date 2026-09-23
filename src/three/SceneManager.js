@@ -6,8 +6,6 @@ import { createBayongModel } from './models/BayongModel';
 import { createPearlModel } from './models/PearlModel';
 import { createClutchModel } from './models/ClutchModel';
 import { createLuminaryModel } from './models/LuminaryModel';
-import { createBarongBomberModel } from './models/BarongBomberModel';
-import { createBarongMenModel } from './models/BarongMenModel';
 import { createSolihiyaBoxModel } from './models/SolihiyaBoxModel';
 import { createOkirCuffModel } from './models/OkirCuffModel';
 import {
@@ -212,18 +210,6 @@ export class SceneManager {
       newModel = createClutchModel(materialOptions.weaveHex || materialOptions.hex, materialOptions.frameHex);
     } else if (modelType === 'luminary') {
       newModel = createLuminaryModel(materialOptions.capizHex, materialOptions.brassHex);
-    } else if (
-      modelType === 'barong-men' ||
-      modelType === 'barong_men' ||
-      modelType === 'ilustrado' ||
-      modelType === 'barong' ||
-      modelType === 'dalisay'
-    ) {
-      newModel = createBarongMenModel(
-        materialOptions.fabricHex || materialOptions.hex,
-        materialOptions.embroideryHex || materialOptions.trimHex,
-        materialOptions.buttonHex || materialOptions.goldHex
-      );
     } else if (modelType === 'solihiya') {
       newModel = createSolihiyaBoxModel(materialOptions.woodHex, materialOptions.caneHex, materialOptions.brassHex);
     } else if (modelType === 'cuff') {

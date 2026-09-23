@@ -303,46 +303,8 @@ export async function initDatabase() {
         );
       }
     } else {
-      // Ensure barong-ilustrado is specifically present
-      const barongCheck = await client.query('SELECT id FROM products WHERE id = $1', ['barong-ilustrado']);
-      if (barongCheck.rows.length === 0) {
-        const p = PRODUCTS.find((x) => x.id === 'barong-ilustrado');
-        if (p) {
-          await client.query(
-            `INSERT INTO products (
-              id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
-              stock_status, lead_time, region, artisan_cooperative, artisan_master,
-              fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
-              description, specs, materials, camera_presets
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
-            ON CONFLICT (id) DO NOTHING`,
-            [
-              p.id,
-              p.name,
-              p.subtitle || '',
-              p.collection || 'Kasuotan & Sutla',
-              p.tagline || '',
-              p.pricePHP || 45000,
-              p.edition || 'Edisyon Limitado',
-              p.batchRemaining ?? 3,
-              p.stockStatus || 'available',
-              p.leadTime || 'Handcrafted',
-              p.region || 'Philippines',
-              p.artisanCooperative || 'Artisan Cooperative',
-              p.artisanMaster || 'Master Artisan',
-              p.fairTradePercentage ?? 45,
-              p.has3DModel ?? false,
-              p.modelType || 'bayong',
-              p.modelGlbUrl || '',
-              p.image || '',
-              p.description || '',
-              JSON.stringify(p.specs || []),
-              JSON.stringify(p.materials || []),
-              JSON.stringify(p.cameraPresets || []),
-            ]
-          );
-        }
-      }
+      // Clean up any test barong products if present
+      await client.query("DELETE FROM products WHERE id IN ('barong-ilustrado', 'barong-dalisay')");
     }
 
     isInitialized = true;
