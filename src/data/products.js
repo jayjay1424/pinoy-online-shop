@@ -323,12 +323,24 @@ export const PRODUCTS = [
     fairTradePercentage: 48,
     has3DModel: true,
     modelType: 'dalisay',
+    image: '/textures/barong_source.png',
     description: 'Classic bespoke formal Barong Tagalog tailored from pure hand-scraped Piña-Seda with Lumban Calado open-work needlework and Mother-of-Pearl buttons.',
+    specs: [
+      { label: 'Silweta / Silhouette', value: 'Masculine tailored straight cut with dual reinforced side vents (bolas)' },
+      { label: 'Tela / Fabric', value: 'Pure 100% Hand-scraped Red Spanish Piña fiber with gossamer weave' },
+      { label: 'Burdang Pechera', value: 'Intricate Lumban Calado needlework open-work grid with Sampaguita motifs' },
+      { label: 'Mga Butones / Buttons', value: 'Natural Palawan Mother-of-Pearl (Madreperla) shell buttons' },
+      { label: 'Kwelyo / Collar', value: 'Architectural Mandarin standing collar with gold welt piping' },
+    ],
     materials: [
-      { id: 'pina-pure', name: 'Pure Handloom Piña Ivory', hex: '#FAF8F2', embroideryHex: '#D4AF37', trimHex: '#3D2415' }
+      { id: 'pina-pure', name: 'Pure Handloom Piña Ivory', hex: '#FAF8F2', fabricHex: '#FAF8F2', embroideryHex: '#D4AF37', buttonHex: '#FFFDF5' }
     ],
     cameraPresets: [
-      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.2, 3.0], target: [0, 0.7, 0] }
+      { id: 'overview', label: 'Overview (3/4)', pos: [0, 1.25, 3.1], target: [0, 0.70, 0] },
+      { id: 'pechera', label: 'Calado Pechera', pos: [0, 1.15, 1.35], target: [0, 0.98, 0] },
+      { id: 'collar', label: 'Mandarin Collar', pos: [0, 1.48, 1.10], target: [0, 1.34, 0] },
+      { id: 'cuff', label: 'French Cuff & MOP', pos: [0.75, 0.65, 1.25], target: [0.55, 0.50, 0] },
+      { id: 'vent', label: 'Side Vent & Hem', pos: [0.70, 0.35, 1.40], target: [0.35, 0.20, 0] },
     ]
   },
   {

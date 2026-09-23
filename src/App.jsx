@@ -114,7 +114,10 @@ export function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map(normalizeProduct);
+          const existingIds = new Set(parsed.map((x) => x.id));
+          const missingFromCode = PRODUCTS.filter((p) => !existingIds.has(p.id));
+          const combined = [...parsed, ...missingFromCode];
+          return combined.map(normalizeProduct);
         }
       }
     } catch (e) {

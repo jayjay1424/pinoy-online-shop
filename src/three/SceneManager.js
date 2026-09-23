@@ -212,17 +212,17 @@ export class SceneManager {
       newModel = createClutchModel(materialOptions.weaveHex || materialOptions.hex, materialOptions.frameHex);
     } else if (modelType === 'luminary') {
       newModel = createLuminaryModel(materialOptions.capizHex, materialOptions.brassHex);
-    } else if (modelType === 'barong-men' || modelType === 'barong_men' || modelType === 'ilustrado') {
+    } else if (
+      modelType === 'barong-men' ||
+      modelType === 'barong_men' ||
+      modelType === 'ilustrado' ||
+      modelType === 'barong' ||
+      modelType === 'dalisay'
+    ) {
       newModel = createBarongMenModel(
         materialOptions.fabricHex || materialOptions.hex,
         materialOptions.embroideryHex || materialOptions.trimHex,
         materialOptions.buttonHex || materialOptions.goldHex
-      );
-    } else if (modelType === 'barong' || modelType === 'dalisay') {
-      newModel = createBarongBomberModel(
-        materialOptions.fabricHex || materialOptions.hex,
-        materialOptions.trimHex || materialOptions.embroideryHex,
-        materialOptions.goldHex || materialOptions.brassHex
       );
     } else if (modelType === 'solihiya') {
       newModel = createSolihiyaBoxModel(materialOptions.woodHex, materialOptions.caneHex, materialOptions.brassHex);
