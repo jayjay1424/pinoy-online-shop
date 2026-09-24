@@ -16,6 +16,7 @@ const inMemoryStore = {
   addresses: [],
   orders: [],
   products: [...PRODUCTS],
+  password_resets: [],
 };
 
 // Seed demo account into fallback store
@@ -192,8 +193,19 @@ export async function initDatabase() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
 
+      -- 5. Password Resets Table
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        code VARCHAR(10) NOT NULL,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+
       -- Performance & Security Indexes
       CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+      CREATE INDEX IF NOT EXISTS idx_password_resets_email ON password_resets(email);
       CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
       CREATE INDEX IF NOT EXISTS idx_orders_order_number ON orders(order_number);
       CREATE INDEX IF NOT EXISTS idx_addresses_user_id ON addresses(user_id);
@@ -533,6 +545,40 @@ function handleInMemoryQuery(text, params) {
     const initialLen = inMemoryStore.products.length;
     inMemoryStore.products = inMemoryStore.products.filter((p) => p.id !== id);
     return { rows: [], rowCount: initialLen - inMemoryStore.products.length };
+  }
+
+  // 13. INSERT into password_resets
+  if (normalized.startsWith('insert into password_resets')) {
+    const newReset = {
+      id: inMemoryStore.password_resets.length + 1,
+      email: (params[0] || '').toLowerCase(),
+      code: (params[1] || '').trim(),
+      user_id: params[2],
+      expires_at: new Date(Date.now() + 15 * 60 * 1000),
+      created_at: new Date(),
+    };
+    inMemoryStore.password_resets.push(newReset);
+    return { rows: [newReset], rowCount: 1 };
+  }
+
+  // 14. SELECT from password_resets
+  if (normalized.startsWith('select') && normalized.includes('from password_resets')) {
+    const email = (params[0] || '').toLowerCase();
+    const code = (params[1] || '').trim();
+    const now = Date.now();
+    const matches = inMemoryStore.password_resets.filter(
+      (r) => r.email === email && (!code || r.code === code) && new Date(r.expires_at).getTime() > now
+    );
+    const sorted = matches.sort((a, b) => b.id - a.id);
+    return { rows: sorted.slice(0, 1), rowCount: sorted.length > 0 ? 1 : 0 };
+  }
+
+  // 15. DELETE from password_resets
+  if (normalized.startsWith('delete from password_resets')) {
+    const email = (params[0] || '').toLowerCase();
+    const initialLen = inMemoryStore.password_resets.length;
+    inMemoryStore.password_resets = inMemoryStore.password_resets.filter((r) => r.email !== email);
+    return { rows: [], rowCount: initialLen - inMemoryStore.password_resets.length };
   }
 
   // Default fallback

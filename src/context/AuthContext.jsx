@@ -134,6 +134,34 @@ export function AuthProvider({ children }) {
     }
   }, [currentUser]);
 
+  // Synchronize local users store
+  function getLocalUsers() {
+    try {
+      const raw = localStorage.getItem(STORAGE_USERS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse local users', e);
+    }
+    const initial = [INITIAL_DEMO_USER];
+    try {
+      localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(initial));
+    } catch {}
+    return initial;
+  }
+
+  function saveLocalUsers(users) {
+    try {
+      localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(users));
+    } catch (e) {
+      console.warn('Failed to save local users', e);
+    }
+  }
+
   // 1. Login Handler (Vercel Serverless + PostgreSQL with fallback)
   const login = async (email, password) => {
     const trimmedEmail = email.trim().toLowerCase();
@@ -145,30 +173,47 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ email: trimmedEmail, password }),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Invalid credentials. Please verify your email and password.');
+        if (!res.ok) {
+          throw new Error(data.error || 'Invalid credentials. Please verify your email and password.');
+        }
+
+        if (data.token) {
+          setAuthToken(data.token);
+          localStorage.setItem(STORAGE_JWT_KEY, data.token);
+        }
+
+        setCurrentUser(data.user);
+        return data.user;
       }
-
-      if (data.token) {
-        setAuthToken(data.token);
-        localStorage.setItem(STORAGE_JWT_KEY, data.token);
-      }
-
-      setCurrentUser(data.user);
-      return data.user;
     } catch (err) {
-      // If API route failed or network is offline, check demo / local fallback
-      if (
-        trimmedEmail === 'maria.clara@likha-atelier.com' &&
-        password === 'password123'
-      ) {
-        setCurrentUser(INITIAL_DEMO_USER);
-        return INITIAL_DEMO_USER;
+      if (err.message && !err.message.includes('fetch') && !err.message.includes('JSON') && !err.message.includes('Unexpected')) {
+        throw err;
       }
-      throw err;
     }
+
+    // Local / Offline fallback
+    const localUsers = getLocalUsers();
+    const matched = localUsers.find((u) => u.email.toLowerCase() === trimmedEmail);
+
+    if (!matched) {
+      throw new Error('No registered account found under this email address.');
+    }
+
+    if (matched.password !== password) {
+      throw new Error('Invalid email or secret credentials. Please verify your password.');
+    }
+
+    const userToSet = {
+      ...matched,
+      orders: matched.orders || [],
+      savedAddresses: matched.savedAddresses || [],
+    };
+    setCurrentUser(userToSet);
+    return userToSet;
   };
 
   // 2. Register Handler (Vercel Serverless + PostgreSQL with fallback)
@@ -185,46 +230,59 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ name, email: trimmedEmail, phone, password }),
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create patron account.');
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to create patron account.');
+        }
+
+        if (data.token) {
+          setAuthToken(data.token);
+          localStorage.setItem(STORAGE_JWT_KEY, data.token);
+        }
+
+        const newUser = {
+          ...data.user,
+          savedAddresses: [],
+          orders: [],
+        };
+
+        const localUsers = getLocalUsers();
+        saveLocalUsers([...localUsers.filter((u) => u.email.toLowerCase() !== trimmedEmail), { ...newUser, password }]);
+
+        setCurrentUser(newUser);
+        return newUser;
       }
-
-      if (data.token) {
-        setAuthToken(data.token);
-        localStorage.setItem(STORAGE_JWT_KEY, data.token);
-      }
-
-      const newUser = {
-        ...data.user,
-        savedAddresses: [],
-        orders: [],
-      };
-
-      setCurrentUser(newUser);
-      return newUser;
     } catch (err) {
-      // Local fallback for off-grid dev
-      if (err.message && !err.message.includes('fetch')) {
+      if (err.message && !err.message.includes('fetch') && !err.message.includes('JSON') && !err.message.includes('Unexpected')) {
         throw err;
       }
-
-      const localNewUser = {
-        id: `usr_${Date.now()}`,
-        name: name.trim(),
-        email: trimmedEmail,
-        phone: phone ? phone.trim() : '',
-        password,
-        tier: 'Kliyente de Honor • Bagong Kasapi',
-        memberSince: new Date().getFullYear().toString(),
-        savedAddresses: [],
-        orders: [],
-      };
-
-      setCurrentUser(localNewUser);
-      return localNewUser;
     }
+
+    // Local / Offline fallback
+    const localUsers = getLocalUsers();
+    const existing = localUsers.find((u) => u.email.toLowerCase() === trimmedEmail);
+    if (existing) {
+      throw new Error('An account with this email address already exists.');
+    }
+
+    const localNewUser = {
+      id: `usr_${Date.now()}`,
+      name: name.trim(),
+      email: trimmedEmail,
+      phone: phone ? phone.trim() : '',
+      password,
+      tier: 'Kliyente de Honor • Bagong Kasapi',
+      memberSince: new Date().getFullYear().toString(),
+      savedAddresses: [],
+      orders: [],
+    };
+
+    saveLocalUsers([...localUsers, localNewUser]);
+    setCurrentUser(localNewUser);
+    return localNewUser;
   };
 
   // 3. Logout Handler
@@ -238,6 +296,9 @@ export function AuthProvider({ children }) {
   // 4. Request Password Reset Code
   const requestPasswordReset = async (email) => {
     const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      throw new Error('Email address is required.');
+    }
 
     try {
       const res = await fetch('/api/auth/forgot-password', {
@@ -246,26 +307,52 @@ export function AuthProvider({ children }) {
         body: JSON.stringify({ action: 'request', email: trimmedEmail }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Unable to request password reset code.');
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Unable to request password reset code.');
+        }
+        return data;
       }
-
-      return data;
     } catch (err) {
-      // Fallback code for local testing
-      const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-      return {
-        success: true,
-        email: trimmedEmail,
-        resetCode,
-      };
+      if (err.message && !err.message.includes('fetch') && !err.message.includes('JSON') && !err.message.includes('Unexpected')) {
+        throw err;
+      }
     }
+
+    // Local / offline fallback
+    const localUsers = getLocalUsers();
+    const user = localUsers.find((u) => u.email.toLowerCase() === trimmedEmail);
+    if (!user) {
+      throw new Error('No account registered under this email address.');
+    }
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetData = {
+      email: trimmedEmail,
+      code: resetCode,
+      expiresAt: Date.now() + 15 * 60 * 1000,
+    };
+    try {
+      localStorage.setItem('likha_active_reset_code', JSON.stringify(resetData));
+    } catch {}
+
+    return {
+      success: true,
+      email: trimmedEmail,
+      resetCode,
+      message: `A 6-digit verification code has been dispatched to ${trimmedEmail}.`,
+    };
   };
 
   // 5. Reset Password Confirmation
   const resetPassword = async (email, newPassword, code) => {
     const trimmedEmail = email.trim().toLowerCase();
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('New password must contain at least 6 characters.');
+    }
 
     try {
       const res = await fetch('/api/auth/forgot-password', {
@@ -275,22 +362,73 @@ export function AuthProvider({ children }) {
           action: 'reset',
           email: trimmedEmail,
           newPassword,
-          code: code || '123456',
+          code: code ? code.trim() : '',
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to update password.');
-      }
+      const contentType = res.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to update password.');
+        }
 
-      return true;
-    } catch (err) {
-      if (currentUser && currentUser.email.toLowerCase() === trimmedEmail) {
-        setCurrentUser((prev) => ({ ...prev, password: newPassword }));
+        // Also update local cache
+        const localUsers = getLocalUsers();
+        const updated = localUsers.map((u) =>
+          u.email.toLowerCase() === trimmedEmail ? { ...u, password: newPassword } : u
+        );
+        saveLocalUsers(updated);
+
+        if (currentUser && currentUser.email.toLowerCase() === trimmedEmail) {
+          setCurrentUser((prev) => ({ ...prev, password: newPassword }));
+        }
+
+        return true;
       }
-      return true;
+    } catch (err) {
+      if (err.message && !err.message.includes('fetch') && !err.message.includes('JSON') && !err.message.includes('Unexpected')) {
+        throw err;
+      }
     }
+
+    // Local fallback verification
+    try {
+      const stored = localStorage.getItem('likha_active_reset_code');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.email === trimmedEmail) {
+          if (Date.now() > parsed.expiresAt) {
+            localStorage.removeItem('likha_active_reset_code');
+            throw new Error('Verification code has expired. Please request a new one.');
+          }
+          if (code && code.trim() !== parsed.code) {
+            throw new Error('Invalid verification code entered.');
+          }
+        }
+      }
+      localStorage.removeItem('likha_active_reset_code');
+    } catch (e) {
+      if (e.message.includes('verification') || e.message.includes('expired')) {
+        throw e;
+      }
+    }
+
+    // Update password in local registry
+    const localUsers = getLocalUsers();
+    const userIndex = localUsers.findIndex((u) => u.email.toLowerCase() === trimmedEmail);
+    if (userIndex === -1) {
+      throw new Error('No account registered under this email.');
+    }
+
+    localUsers[userIndex].password = newPassword;
+    saveLocalUsers(localUsers);
+
+    if (currentUser && currentUser.email.toLowerCase() === trimmedEmail) {
+      setCurrentUser((prev) => ({ ...prev, password: newPassword }));
+    }
+
+    return true;
   };
 
   // 6. Update Profile

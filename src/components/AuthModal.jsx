@@ -84,6 +84,18 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login', notice = '', 
   const handleFillDemo = () => {
     sound.playBrassClick();
     setLoginEmail('maria.clara@likha-atelier.com');
+    try {
+      const stored = localStorage.getItem('likha_atelier_users');
+      if (stored) {
+        const users = JSON.parse(stored);
+        const demo = users.find((u) => u.email === 'maria.clara@likha-atelier.com');
+        if (demo && demo.password) {
+          setLoginPassword(demo.password);
+          resetMessages();
+          return;
+        }
+      }
+    } catch {}
     setLoginPassword('password123');
     resetMessages();
   };
@@ -138,7 +150,7 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login', notice = '', 
       setSimulatedCode(res.resetCode);
       setResetCodeInput(res.resetCode); // Pre-fill convenience
       setForgotStep(2);
-      setSuccessMsg(`A 6-digit verification code has been dispatched to ${res.email}.`);
+      setSuccessMsg(res.message || `A 6-digit verification code has been dispatched to ${res.email}.`);
       setIsLoading(false);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to request reset.');
@@ -168,6 +180,9 @@ export function AuthModal({ isOpen, onClose, initialTab = 'login', notice = '', 
         setLoginEmail(forgotEmail);
         setLoginPassword(newPassword);
         setForgotStep(1);
+        setNewPassword('');
+        setResetCodeInput('');
+        setSimulatedCode(null);
         setIsLoading(false);
       }, 1200);
     } catch (err) {

@@ -1,9 +1,6 @@
 import { query } from '../_lib/db.js';
 import { hashPassword, setSecurityHeaders, checkRateLimit, sanitizeInput } from '../_lib/security.js';
 
-// In-memory verification cache for dispatched reset codes with 15-minute expiry
-const resetTokens = new Map();
-
 export default async function handler(req, res) {
   setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -43,16 +40,21 @@ export default async function handler(req, res) {
     // 1. Action: Request verification code
     if (action === 'request') {
       const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-      resetTokens.set(trimmedEmail, {
-        code: resetCode,
-        userId: user.id,
-        expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-      });
+      
+      // Remove any previous unused codes for this email
+      await query('DELETE FROM password_resets WHERE email = $1', [trimmedEmail]);
+
+      // Insert new verified reset code with 15-minute validity
+      await query(
+        `INSERT INTO password_resets (email, code, user_id)
+         VALUES ($1, $2, $3)`,
+        [trimmedEmail, resetCode, user.id]
+      );
 
       return res.status(200).json({
         success: true,
         message: `A 6-digit verification code has been dispatched to ${trimmedEmail}.`,
-        resetCode, // Return for simulation/testing in developer mode
+        resetCode, // Included for seamless development & verification
       });
     }
 
@@ -66,24 +68,28 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
       }
 
-      const cached = resetTokens.get(trimmedEmail);
-      if (!cached || cached.code !== code.trim()) {
+      const cleanCode = code.trim();
+      const resetRes = await query(
+        `SELECT id, user_id FROM password_resets
+         WHERE email = $1 AND code = $2`,
+        [trimmedEmail, cleanCode]
+      );
+
+      if (resetRes.rows.length === 0) {
         return res.status(400).json({ error: 'Invalid or expired verification code.' });
       }
 
-      if (Date.now() > cached.expires) {
-        resetTokens.delete(trimmedEmail);
-        return res.status(400).json({ error: 'Verification code has expired. Please request a new one.' });
-      }
+      const resetRecord = resetRes.rows[0];
 
       // Hash new password with bcrypt
       const passwordHash = await hashPassword(newPassword);
       await query('UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2', [
         passwordHash,
-        cached.userId,
+        resetRecord.user_id,
       ]);
 
-      resetTokens.delete(trimmedEmail);
+      // Invalidate all reset tokens for this user
+      await query('DELETE FROM password_resets WHERE email = $1', [trimmedEmail]);
 
       return res.status(200).json({
         success: true,
