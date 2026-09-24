@@ -147,6 +147,13 @@ export function App() {
   const [activeCurrency, setActiveCurrency] = useState('PHP');
 
   const [cart, setCart] = useState([]);
+  const [orders, setOrders] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('likha_patron_orders') || '[]');
+    } catch (e) {
+      return [];
+    }
+  });
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutPackaging, setCheckoutPackaging] = useState(null);
@@ -231,6 +238,15 @@ export function App() {
   const handleOrderCompleted = (orderData) => {
     // Clear cart after successful order authorization
     setCart([]);
+    if (orderData) {
+      setOrders((prev) => {
+        const updated = [orderData, ...prev];
+        try {
+          localStorage.setItem('likha_patron_orders', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+    }
   };
 
   // Admin CRUD Handlers
@@ -465,6 +481,11 @@ export function App() {
           <ConciergeModal
             isOpen={isConciergeOpen}
             onClose={() => setIsConciergeOpen(false)}
+            catalog={products}
+            activeProduct={activeProduct}
+            onSelectProduct={handleSelectProduct}
+            onAddToCart={handleQuickAddToCart}
+            orders={orders}
           />
         )}
 

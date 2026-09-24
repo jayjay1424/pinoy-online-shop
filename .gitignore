@@ -30,5 +30,6 @@ Thumbs.db
 
 # Scratch & Temporary
 scratch/
-.agents/
+.agents/*
+!.agents/skills/
 
