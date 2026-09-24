@@ -11,9 +11,9 @@ export function MoodStudio({ activeMood, onSelectMood }) {
   ];
 
   return (
-    <div className="absolute top-20 right-4 z-20 pointer-events-auto hidden lg:flex flex-col gap-1.5 p-1.5 glass-panel rounded-2xl shadow-warm border border-[#5C3A21]/15">
-      <span className="text-[9px] uppercase tracking-widest text-[#8C5A3C] font-semibold px-2 py-0.5 text-center">
-        3D Atmosphere
+    <div className="absolute top-20 right-4 z-20 pointer-events-auto hidden lg:flex flex-col gap-1.5 p-2 glass-panel rounded-2xl shadow-warm border border-[#5C3A21]/20">
+      <span className="text-[9px] uppercase tracking-widest text-[#8C5A3C] font-mono font-bold px-2 py-0.5 text-center">
+        ATMOSPHERE
       </span>
       {MOODS.map((m) => {
         const Icon = m.icon;
@@ -25,13 +25,13 @@ export function MoodStudio({ activeMood, onSelectMood }) {
               sound.playBrassClick();
               onSelectMood(m.id);
             }}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               isActive
-                ? 'bg-[#5C3A21] text-white shadow-xs'
-                : 'text-[#24140E] hover:bg-[#F2ECE4]'
+                ? 'bg-[#24140E] text-[#EAD7B2] border border-[#C4975D]/40 shadow-xs'
+                : 'text-[#5C3A21] hover:bg-[#F2ECE4]'
             }`}
           >
-            <Icon className="w-3.5 h-3.5 text-[#C4975D]" />
+            <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#C4975D]' : 'text-[#8C5A3C]'}`} />
             <span className="text-[11px] whitespace-nowrap">{m.label}</span>
           </button>
         );

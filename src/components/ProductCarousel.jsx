@@ -126,51 +126,69 @@ export function ProductCarousel({
                 sound.playBrassClick();
                 onSelectProduct(p);
               }}
-              className={`min-w-[165px] max-w-[185px] shrink-0 text-left p-3.5 rounded-2xl transition-all duration-300 flex flex-col justify-between border relative group ${
+              className={`min-w-[175px] max-w-[195px] shrink-0 text-left p-3.5 rounded-2xl transition-all duration-300 flex flex-col justify-between border relative group ${
                 isActive
-                  ? 'bg-white border-[#5C3A21] shadow-warm scale-[1.03] ring-1 ring-[#5C3A21]/30 z-10'
-                  : 'bg-[#FAF8F5]/90 border-[#5C3A21]/15 hover:bg-white hover:border-[#5C3A21]/40 hover:shadow-xs'
+                  ? 'bg-[#24140E] text-[#FAF8F5] border-[#C4975D] shadow-warm-lg scale-[1.04] ring-2 ring-[#C4975D]/40 z-10'
+                  : 'bg-white/85 border-[#5C3A21]/15 hover:bg-white hover:border-[#C4975D]/50 hover:shadow-warm'
               }`}
             >
               {/* Active Indicator Top Notch */}
               {isActive && (
-                <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-[#5C3A21] text-[8px] font-mono text-white rounded-full uppercase tracking-wider shadow-xs">
-                  Active
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 bg-[#C4975D] text-[8.5px] font-mono font-bold text-[#180D09] rounded-full uppercase tracking-widest shadow-xs">
+                  IN STAGE
                 </div>
               )}
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="p-1 rounded-lg bg-[#F2ECE4] border border-[#5C3A21]/10 group-hover:border-[#5C3A21]/25 transition-colors">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`p-1.5 rounded-xl border transition-colors ${
+                    isActive
+                      ? 'bg-[#341E15] border-[#C4975D]/40'
+                      : 'bg-[#F2ECE4] border-[#5C3A21]/10 group-hover:border-[#5C3A21]/25'
+                  }`}>
                     {getCraftIcon(p.modelType)}
                   </span>
                   {p.modelGlbUrl ? (
-                    <span className="text-[8px] uppercase tracking-wider font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-300/60 shadow-2xs">
+                    <span className={`text-[8px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
+                      isActive
+                        ? 'bg-[#C4975D]/20 text-[#EAD7B2] border-[#C4975D]/40'
+                        : 'text-amber-900 bg-amber-100 border-amber-300/60'
+                    }`}>
                       ✨ 3D Couture
                     </span>
                   ) : (
-                    <span className="text-[8px] uppercase tracking-wider font-semibold text-[#8C5A3C]">
+                    <span className={`text-[8px] uppercase tracking-wider font-semibold ${
+                      isActive ? 'text-[#C4975D]' : 'text-[#8C5A3C]'
+                    }`}>
                       3D Mesh
                     </span>
                   )}
                 </div>
 
-                <span className="text-[8px] uppercase tracking-wider font-semibold text-[#8C5A3C] block mb-0.5 truncate">
+                <span className={`text-[8.5px] uppercase tracking-widest font-semibold block mb-0.5 truncate ${
+                  isActive ? 'text-[#C4975D]' : 'text-[#8C5A3C]'
+                }`}>
                   {p.collection}
                 </span>
-                <h4 className="font-serif text-xs sm:text-sm font-semibold text-[#24140E] leading-snug line-clamp-2">
+                <h4 className={`font-serif text-xs sm:text-sm font-semibold leading-snug line-clamp-2 ${
+                  isActive ? 'text-white' : 'text-[#24140E]'
+                }`}>
                   {p.name}
                 </h4>
               </div>
 
-              <div className="mt-2.5 pt-2 border-t border-[#5C3A21]/10 flex items-center justify-between">
-                <span className="text-[11px] font-bold text-[#5C3A21]">
+              <div className={`mt-3 pt-2 border-t flex items-center justify-between ${
+                isActive ? 'border-[#C4975D]/30' : 'border-[#5C3A21]/10'
+              }`}>
+                <span className={`text-[11px] font-bold ${
+                  isActive ? 'text-[#EAD7B2]' : 'text-[#5C3A21]'
+                }`}>
                   {rateInfo.symbol} {convertedPrice.toLocaleString()}
                 </span>
                 {isActive ? (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#5C3A21] animate-ping" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#C4975D] animate-ping" />
                 ) : (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#5C3A21]/20 group-hover:bg-[#5C3A21]/60" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#5C3A21]/20 group-hover:bg-[#C4975D]" />
                 )}
               </div>
             </button>

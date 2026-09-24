@@ -34,23 +34,58 @@
 
 /* Glassmorphism and Luxury Utility Styles */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(92, 58, 33, 0.12);
+  box-shadow: 0 10px 30px -10px rgba(92, 58, 33, 0.06);
 }
 
 .glass-panel-dark {
-  background: rgba(36, 20, 14, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(24, 13, 9, 0.90);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(196, 151, 93, 0.25);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
 .glass-pill {
-  background: rgba(242, 236, 228, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(92, 58, 33, 0.15);
+  background: rgba(250, 248, 245, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(92, 58, 33, 0.14);
+}
+
+/* Luxury Pedestal Stage Lighting Vignette */
+.pedestal-vignette {
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(247, 242, 234, 0.4) 45%,
+    rgba(235, 226, 215, 0.2) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Gold Glow and Metallic Effects */
+.gold-glow {
+  box-shadow: 0 0 25px -4px rgba(196, 151, 93, 0.35);
+}
+
+.gold-glow-subtle {
+  box-shadow: 0 0 16px -2px rgba(196, 151, 93, 0.22);
+}
+
+.gold-border-glow:hover {
+  border-color: rgba(196, 151, 93, 0.6);
+  box-shadow: 0 0 20px -3px rgba(196, 151, 93, 0.25);
+}
+
+.text-gold-gradient {
+  background: linear-gradient(135deg, #A6793F 0%, #D8B277 50%, #8C5A3C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* Subtle gold reflection shimmer animation */
@@ -71,9 +106,28 @@
   background-image: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0) 0,
-    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.35) 50%,
     rgba(255, 255, 255, 0) 100%
   );
-  animation: shimmer 3s infinite;
+  animation: shimmer 3.5s infinite;
+}
+
+/* Smooth Fade In */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Hide scrollbars for smooth panoramic ribbon */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 

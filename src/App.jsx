@@ -409,6 +409,7 @@ export function App() {
                 onMonogramChange={setMonogram}
                 activeCurrency={activeCurrency}
                 onAddToCart={handleAddToCart}
+                onOpenConcierge={() => setIsConciergeOpen(true)}
               />
             </div>
 

@@ -365,28 +365,29 @@ export function Stage3D({
       {/* Three.js Canvas Mount */}
       <div
         ref={mountRef}
-        className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
+        className="w-full h-full cursor-grab active:cursor-grabbing touch-none relative z-10"
       />
 
-      {/* 3D Model Asset Loading Overlay */}
-      {isLoadingModel && (
-        <div className="absolute inset-0 z-35 bg-[#FAF8F5]/88 backdrop-blur-xs flex flex-col items-center justify-center p-6 text-center animate-fade-in pointer-events-none">
-          <div className="w-12 h-12 rounded-full border-3 border-[#C4975D]/30 border-t-[#5C3A21] animate-spin mb-3 shadow-xs" />
-          <h4 className="font-serif font-semibold text-base text-[#24140E]">
-            {product.name}
-          </h4>
-          <span className="text-xs font-mono text-[#8C5A3C] mt-1.5 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-[#C4975D] animate-spin" />
-            <span>
-              {loadingProgress > 0 ? `Streaming 3D Mesh... ${loadingProgress}%` : 'Loading haute couture 3D model...'}
-            </span>
+      {/* Gallery Pedestal Lighting Vignette */}
+      <div className="absolute inset-0 pedestal-vignette pointer-events-none z-15" />
+
+      {/* Museum Archival Plaque (Top-Left) */}
+      {!customModelInfo && (
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-[#FAF8F5]/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#C4975D]/35 shadow-warm text-xs pointer-events-auto">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#C4975D] animate-ping" />
+          <span className="text-[10px] font-mono tracking-widest uppercase text-[#5C3A21] font-bold">
+            SPATIAL ATELIER
+          </span>
+          <span className="text-[#C4975D]/60">•</span>
+          <span className="text-[10px] font-serif italic text-[#8C5A3C] max-w-[130px] sm:max-w-[200px] truncate">
+            {selectedMaterial ? selectedMaterial.name : product.collection}
           </span>
         </div>
       )}
 
       {/* Active Custom 3D Model Badge */}
       {customModelInfo && (
-        <div className="absolute top-4 left-4 z-30 flex items-center gap-2.5 bg-[#FAF8F5]/92 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#C4975D]/40 shadow-warm text-xs text-[#24140E] animate-fade-in">
+        <div className="absolute top-4 left-4 z-30 flex items-center gap-2.5 bg-[#FAF8F5]/92 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-[#C4975D]/40 shadow-warm text-xs text-[#24140E] animate-fade-in pointer-events-auto">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-serif font-semibold text-[#5C3A21] max-w-[160px] truncate">
             {customModelInfo.name}
