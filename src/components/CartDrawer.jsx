@@ -330,13 +330,6 @@ export function CartDrawer({
                 </span>
               </div>
 
-              {!isAuthenticated && (
-                <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2 animate-fadeIn">
-                  <Lock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                  <span>Patron sign-in required. You will be prompted to log in before checking out.</span>
-                </div>
-              )}
-
               <button
                 onClick={() => {
                   sound.playWoodThud();
@@ -348,7 +341,7 @@ export function CartDrawer({
                 }}
                 className="w-full py-3.5 px-6 rounded-full bg-[#5C3A21] text-white hover:bg-[#432916] active:scale-98 transition-all font-medium text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-warm"
               >
-                <span>{isAuthenticated ? 'Proceed to Private Checkout' : 'Sign In & Place Order'}</span>
+                <span>Proceed to Private Checkout</span>
                 <ArrowRight className="w-4 h-4 text-[#C4975D]" />
               </button>
 

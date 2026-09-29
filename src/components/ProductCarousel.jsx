@@ -180,11 +180,20 @@ export function ProductCarousel({
               <div className={`mt-3 pt-2 border-t flex items-center justify-between ${
                 isActive ? 'border-[#C4975D]/30' : 'border-[#5C3A21]/10'
               }`}>
-                <span className={`text-[11px] font-bold ${
-                  isActive ? 'text-[#EAD7B2]' : 'text-[#5C3A21]'
-                }`}>
-                  {rateInfo.symbol} {convertedPrice.toLocaleString()}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[11px] font-bold ${
+                    isActive ? 'text-[#EAD7B2]' : 'text-[#5C3A21]'
+                  }`}>
+                    {rateInfo.symbol} {convertedPrice.toLocaleString()}
+                  </span>
+                  {(p.batchRemaining ?? p.batch_remaining) === 0 ? (
+                    <span className="text-[8px] font-bold text-rose-400 uppercase">Sold Out</span>
+                  ) : (p.batchRemaining ?? p.batch_remaining) <= 2 ? (
+                    <span className={`text-[8px] font-semibold ${isActive ? 'text-amber-300' : 'text-amber-800'}`}>
+                      • {p.batchRemaining ?? p.batch_remaining} left
+                    </span>
+                  ) : null}
+                </div>
                 {isActive ? (
                   <span className="w-1.5 h-1.5 rounded-full bg-[#C4975D] animate-ping" />
                 ) : (

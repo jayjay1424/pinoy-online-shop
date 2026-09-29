@@ -11,6 +11,7 @@ export function ProductInfo({
   onMonogramChange,
   activeCurrency,
   onAddToCart,
+  onDirectCheckout,
   onOpenConcierge,
 }) {
   const [specsOpen, setSpecsOpen] = useState(false);
@@ -54,6 +55,26 @@ export function ProductInfo({
       currency: activeCurrency,
     });
     setTimeout(() => setAddedAnimation(false), 1400);
+  };
+
+  const handleDirectAcquire = () => {
+    if (isSoldOut) return;
+    sound.playWoodThud();
+    const itemConfig = {
+      product,
+      selectedMaterial,
+      monogram,
+      embroideryMotif: product.modelType === 'barong' ? selectedEmbroidery : null,
+      unitPrice: convertedPrice,
+      quantity,
+      price: totalPrice,
+      currency: activeCurrency,
+    };
+    if (onDirectCheckout) {
+      onDirectCheckout(itemConfig);
+    } else {
+      handleAdd();
+    }
   };
 
   return (
@@ -264,62 +285,80 @@ export function ProductInfo({
       )}
 
       {/* Primary Actions: Acquire Piece, Concierge, & Wishlist */}
-      <div className="flex items-center gap-2.5 mb-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 mb-6">
+        {/* Instant 1-Click Acquire / Checkout Button */}
         <button
-          onClick={handleAdd}
+          onClick={handleDirectAcquire}
           disabled={isSoldOut}
-          className={`flex-1 py-3 sm:py-3.5 px-3 sm:px-6 rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 shadow-warm hover:shadow-warm-lg active:scale-98 min-w-0 ${
+          className={`flex-1 py-3.5 px-4 sm:px-6 rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 shadow-warm hover:shadow-warm-lg active:scale-98 min-w-0 ${
             isSoldOut
               ? 'bg-stone-300 text-stone-500 border border-stone-400/40 cursor-not-allowed'
-              : addedAnimation
-              ? 'bg-[#8C5A3C] text-white scale-98 animate-shimmer'
               : 'bg-[#24140E] text-[#FAF8F5] hover:bg-[#341E15] border border-[#C4975D]/40 animate-shimmer'
           }`}
         >
           {isSoldOut ? (
             <span>Sold Out</span>
-          ) : addedAnimation ? (
-            <>
-              <Check className="w-4 h-4 text-[#C4975D] shrink-0" />
-              <span className="truncate">Added to Atelier Bag</span>
-            </>
           ) : (
             <>
               <ShoppingBag className="w-4 h-4 text-[#C4975D] shrink-0" />
-              <span className="truncate">Acquire • {formattedPrice}</span>
+              <span className="truncate">Acquire Piece Now • {formattedPrice}</span>
             </>
           )}
         </button>
 
-        {onOpenConcierge && (
+        {/* Add to Atelier Bag */}
+        {!isSoldOut && (
           <button
-            onClick={() => {
-              sound.playBrassClick();
-              onOpenConcierge();
-            }}
-            className="p-3 sm:p-3.5 rounded-full border border-[#5C3A21]/20 bg-white text-[#5C3A21] hover:bg-[#FAF8F5] hover:text-[#24140E] transition-all shadow-xs shrink-0"
-            title="Inquire with AI Concierge about this Masterwork"
-            aria-label="Ask Concierge"
+            onClick={handleAdd}
+            className={`py-3.5 px-4 sm:px-5 rounded-full font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 border active:scale-98 shrink-0 ${
+              addedAnimation
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                : 'bg-white text-[#5C3A21] hover:bg-[#FAF8F5] border-[#5C3A21]/20 shadow-xs'
+            }`}
+            title="Add to Atelier Bag for Multi-Piece Order"
           >
-            <Sparkles className="w-4 h-4 text-[#C4975D]" />
+            {addedAnimation ? (
+              <>
+                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>In Bag</span>
+              </>
+            ) : (
+              <span>Add to Bag</span>
+            )}
           </button>
         )}
 
-        <button
-          onClick={() => {
-            sound.playBrassClick();
-            setIsWishlisted(!isWishlisted);
-          }}
-          className={`p-3 sm:p-3.5 rounded-full border transition-all shrink-0 ${
-            isWishlisted
-              ? 'bg-rose-50 border-rose-200 text-rose-600'
-              : 'border-[#5C3A21]/20 bg-white text-[#6E5D53] hover:text-[#24140E] hover:bg-[#FAF8F5]'
-          }`}
-          title="Save to Private Wishlist"
-          aria-label="Wishlist"
-        >
-          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
-        </button>
+        <div className="flex items-center justify-center gap-2">
+          {onOpenConcierge && (
+            <button
+              onClick={() => {
+                sound.playBrassClick();
+                onOpenConcierge();
+              }}
+              className="p-3 sm:p-3.5 rounded-full border border-[#5C3A21]/20 bg-white text-[#5C3A21] hover:bg-[#FAF8F5] hover:text-[#24140E] transition-all shadow-xs shrink-0"
+              title="Inquire with AI Concierge about this Masterwork"
+              aria-label="Ask Concierge"
+            >
+              <Sparkles className="w-4 h-4 text-[#C4975D]" />
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              sound.playBrassClick();
+              setIsWishlisted(!isWishlisted);
+            }}
+            className={`p-3 sm:p-3.5 rounded-full border transition-all shrink-0 ${
+              isWishlisted
+                ? 'bg-rose-50 border-rose-200 text-rose-600'
+                : 'border-[#5C3A21]/20 bg-white text-[#6E5D53] hover:text-[#24140E] hover:bg-[#FAF8F5]'
+            }`}
+            title="Save to Private Wishlist"
+            aria-label="Wishlist"
+          >
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Fair-Trade Artisan Provenance Box */}

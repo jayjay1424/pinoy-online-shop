@@ -10,6 +10,11 @@ import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
 import { normalizeProduct } from './utils/productUtils';
+import {
+  mergeProductsWithInventory,
+  deductStockForOrder,
+  updateProductStockInStorage,
+} from './utils/inventory';
 import { useAuth } from './context/AuthContext';
 import { sound } from './utils/sound';
 
@@ -107,7 +112,7 @@ export function App() {
     };
   }, []);
 
-  // Dynamic catalog state with localStorage persistence and API sync
+  // Dynamic catalog state with localStorage persistence, persistent inventory tracking, and API sync
   const [products, setProducts] = useState(() => {
     try {
       const stored = localStorage.getItem('likha_catalog_items');
@@ -117,13 +122,13 @@ export function App() {
           const existingIds = new Set(parsed.map((x) => x.id));
           const missingFromCode = PRODUCTS.filter((p) => !existingIds.has(p.id));
           const combined = [...parsed, ...missingFromCode];
-          return combined.map(normalizeProduct);
+          return mergeProductsWithInventory(combined.map(normalizeProduct));
         }
       }
     } catch (e) {
       console.warn('Failed to parse catalog from localStorage', e);
     }
-    return PRODUCTS.map(normalizeProduct);
+    return mergeProductsWithInventory(PRODUCTS.map(normalizeProduct));
   });
 
   const [activeProduct, setActiveProduct] = useState(() => {
@@ -132,11 +137,13 @@ export function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return normalizeProduct(parsed[0]);
+          const merged = mergeProductsWithInventory(parsed.map(normalizeProduct));
+          return merged[0];
         }
       }
     } catch (e) {}
-    return normalizeProduct(PRODUCTS[0]);
+    const defaultMerged = mergeProductsWithInventory(PRODUCTS.map(normalizeProduct));
+    return defaultMerged[0];
   });
 
   const [selectedMaterial, setSelectedMaterial] = useState(
@@ -147,6 +154,7 @@ export function App() {
   const [activeCurrency, setActiveCurrency] = useState('PHP');
 
   const [cart, setCart] = useState([]);
+  const [directCheckoutItem, setDirectCheckoutItem] = useState(null);
   const [orders, setOrders] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('likha_patron_orders') || '[]');
@@ -166,7 +174,7 @@ export function App() {
   const [authNotice, setAuthNotice] = useState('');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
 
-  // Sync with PostgreSQL / Serverless API on mount and on demand
+  // Sync with PostgreSQL / Serverless API on mount and on demand, merging with persistent inventory
   const refreshProducts = async (forceSeed = false) => {
     try {
       const url = forceSeed ? '/api/products?seed=true' : '/api/products';
@@ -176,16 +184,19 @@ export function App() {
         const prods = data?.products || data?.data;
         if (data && data.success && Array.isArray(prods) && prods.length > 0) {
           const normalizedList = prods.map(normalizeProduct);
-          setProducts(normalizedList);
+          // Protect purchased stock from being overwritten by stateless server responses
+          const syncedList = mergeProductsWithInventory(normalizedList);
+
+          setProducts(syncedList);
           setActiveProduct((prevActive) => {
-            if (!prevActive) return normalizedList[0];
-            const updatedActive = normalizedList.find((p) => p.id === prevActive.id);
-            return updatedActive || normalizedList[0];
+            if (!prevActive) return syncedList[0];
+            const updatedActive = syncedList.find((p) => p.id === prevActive.id);
+            return updatedActive || syncedList[0];
           });
           try {
-            localStorage.setItem('likha_catalog_items', JSON.stringify(normalizedList));
+            localStorage.setItem('likha_catalog_items', JSON.stringify(syncedList));
           } catch (e) {}
-          return normalizedList;
+          return syncedList;
         }
       }
     } catch (err) {
@@ -283,25 +294,29 @@ export function App() {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Proceed to Checkout
+  // Proceed to Checkout from Bag
   const handleProceedToCheckout = (packagingConfig) => {
-    if (!isAuthenticated) {
-      sound.playBrassClick();
-      setPendingCheckoutPackaging(packagingConfig);
-      setAuthNotice('Patron sign-in is required before placing an order or authorizing payment.');
-      setIsCartOpen(false);
-      setIsAuthOpen(true);
-      return;
-    }
+    sound.playBrassClick();
+    setDirectCheckoutItem(null);
     setCheckoutPackaging(packagingConfig);
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   };
 
-  // Order Completed: Record order and deduct purchased stock from product inventory
+  // Direct 1-Click Acquisition from Product Page
+  const handleDirectCheckout = (itemConfig) => {
+    sound.playBrassClick();
+    setDirectCheckoutItem(itemConfig);
+    setCheckoutPackaging({ packagingType: 'Kamagong Crate', giftNote: 'Heirloom Reserve' });
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  // Order Completed: Record order and atomically deduct purchased stock from product inventory
   const handleOrderCompleted = (orderData) => {
-    // Clear cart after successful order authorization
+    // Clear cart and directCheckoutItem after successful order authorization
     setCart([]);
+    setDirectCheckoutItem(null);
     if (orderData) {
       setOrders((prev) => {
         const updated = [orderData, ...prev];
@@ -311,52 +326,28 @@ export function App() {
         return updated;
       });
 
-      // Deduct inventory batch_remaining for every purchased item
+      // Atomically deduct inventory for every purchased item
       if (Array.isArray(orderData.items) && orderData.items.length > 0) {
-        const purchasedMap = {};
-        orderData.items.forEach((item) => {
-          const pId = item.product?.id || item.productId || item.id;
-          const qty = Math.max(1, Number(item.quantity || 1));
-          if (pId) {
-            purchasedMap[pId] = (purchasedMap[pId] || 0) + qty;
-          }
-        });
-
-        // 1. Update product catalog state
         setProducts((prevProducts) => {
-          const updated = prevProducts.map((p) => {
-            const purchasedQty = purchasedMap[p.id];
-            if (purchasedQty) {
-              const curStock = typeof p.batchRemaining === 'number'
-                ? p.batchRemaining
-                : (typeof p.batch_remaining === 'number' ? p.batch_remaining : 3);
-              const newRemaining = Math.max(0, curStock - purchasedQty);
-              const isArchived = newRemaining === 0;
-              return {
-                ...p,
-                batchRemaining: newRemaining,
-                batch_remaining: newRemaining,
-                stockStatus: isArchived ? 'archived' : p.stockStatus,
-                stock_status: isArchived ? 'archived' : p.stock_status,
-              };
-            }
-            return p;
-          });
+          const { updatedProducts } = deductStockForOrder(orderData.items, prevProducts);
 
           try {
-            localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
+            localStorage.setItem('likha_catalog_items', JSON.stringify(updatedProducts));
           } catch (e) {
             console.warn('localStorage catalog save warning:', e);
           }
 
-          return updated;
+          return updatedProducts;
         });
 
-        // 2. Update activeProduct displayed in 3D Hero if it was purchased
+        // Also update activeProduct displayed in 3D Hero / ProductInfo
         setActiveProduct((currentActive) => {
           if (!currentActive) return currentActive;
-          const purchasedQty = purchasedMap[currentActive.id];
-          if (purchasedQty) {
+          const purchasedItem = orderData.items.find(
+            (it) => (it.product?.id || it.productId || it.id) === currentActive.id
+          );
+          if (purchasedItem) {
+            const purchasedQty = Math.max(1, Number(purchasedItem.quantity || 1));
             const curStock = typeof currentActive.batchRemaining === 'number'
               ? currentActive.batchRemaining
               : (typeof currentActive.batch_remaining === 'number' ? currentActive.batch_remaining : 3);
@@ -424,6 +415,12 @@ export function App() {
 
   const handleUpdateProduct = async (updatedProd) => {
     const normalized = normalizeProduct(updatedProd);
+
+    // Update persistent stock map if admin modified stock
+    if (typeof normalized.batchRemaining === 'number') {
+      updateProductStockInStorage(normalized.id, normalized.batchRemaining);
+    }
+
     setProducts((prev) => {
       const updated = prev.map((p) => (p.id === normalized.id ? normalized : p));
       try {
@@ -554,6 +551,7 @@ export function App() {
                 onMonogramChange={setMonogram}
                 activeCurrency={activeCurrency}
                 onAddToCart={handleAddToCart}
+                onDirectCheckout={handleDirectCheckout}
                 onOpenConcierge={() => setIsConciergeOpen(true)}
               />
             </div>
@@ -598,8 +596,11 @@ export function App() {
 
       <CheckoutModal
         isOpen={isCheckoutOpen}
-        onClose={() => setIsCheckoutOpen(false)}
-        items={cart}
+        onClose={() => {
+          setIsCheckoutOpen(false);
+          setDirectCheckoutItem(null);
+        }}
+        items={directCheckoutItem ? [directCheckoutItem] : cart}
         packagingOptions={checkoutPackaging}
         activeCurrency={activeCurrency}
         onOrderCompleted={handleOrderCompleted}

@@ -142,12 +142,6 @@ export function CheckoutModal({
   ];
 
   const handleSimulatePayment = () => {
-    if (!isAuthenticated) {
-      sound.playBrassClick();
-      if (onOpenAuth) onOpenAuth('Please sign in or register before authorizing payment.');
-      return;
-    }
-
     sound.playBrassClick();
     setStep('authorizing');
 
@@ -174,7 +168,7 @@ export function CheckoutModal({
 
       setConfirmedOrder(orderData);
       setStep('success');
-      if (recordOrder) recordOrder(orderData);
+      if (recordOrder && isAuthenticated) recordOrder(orderData);
       onOrderCompleted(orderData);
     }, 1800);
   };
@@ -238,22 +232,25 @@ export function CheckoutModal({
 
         {/* Guest Patron Notice */}
         {!isAuthenticated && step !== 'success' && (
-          <div className="bg-amber-50 border-b border-amber-300 px-5 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950 animate-fadeIn">
-            <div className="flex items-center gap-2.5">
-              <Lock className="w-4 h-4 text-amber-700 shrink-0" />
+          <div className="bg-[#FAF8F5] border-b border-[#5C3A21]/15 px-5 sm:px-6 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-[#5C3A21] animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#C4975D] shrink-0" />
               <span>
-                <strong>Patron Account Required:</strong> Please sign in or register before ordering or paying.
+                <strong>Express Guest Acquisition:</strong> No account required. Enter delivery address below.
               </span>
             </div>
-            <button
-              onClick={() => {
-                sound.playBrassClick();
-                if (onOpenAuth) onOpenAuth('Please sign in or register before ordering or paying.');
-              }}
-              className="px-3.5 py-1.5 rounded-full bg-[#5C3A21] text-white text-xs font-semibold shrink-0 hover:bg-[#432916] transition-all shadow-xs"
-            >
-              Sign In / Register
-            </button>
+            {onOpenAuth && (
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playBrassClick();
+                  onOpenAuth('Sign in or register to link this acquisition to your patron vault.');
+                }}
+                className="text-[11px] underline font-semibold text-[#8C5A3C] hover:text-[#5C3A21] shrink-0"
+              >
+                Sign In to Vault
+              </button>
+            )}
           </div>
         )}
 
