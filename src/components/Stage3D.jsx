@@ -3,7 +3,7 @@ import { SceneManager } from '../three/SceneManager';
 import { CameraHUD } from './CameraHUD';
 import { MoodStudio } from './MoodStudio';
 import { PatinaSlider } from './PatinaSlider';
-import { Maximize2, Minimize2, UploadCloud, Sparkles, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, Sparkles, CheckCircle2 } from 'lucide-react';
 import { sound } from '../utils/sound';
 
 export function Stage3D({
@@ -23,7 +23,6 @@ export function Stage3D({
   const [isExploded, setIsExploded] = useState(false);
   const [patinaYear, setPatinaYear] = useState(0);
   const [isLuminaryLightOn, setIsLuminaryLightOn] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [customModelInfo, setCustomModelInfo] = useState(null);
   const [isLoadingModel, setIsLoadingModel] = useState(false);
@@ -333,25 +332,13 @@ export function Stage3D({
     sound.playBrassClick();
   };
 
-  const toggleFullscreen = () => {
-    sound.playBrassClick();
-    setIsFullscreen(!isFullscreen);
-    setTimeout(() => {
-      if (sceneManagerRef.current) sceneManagerRef.current.onResize();
-    }, 100);
-  };
-
   return (
     <div
       ref={containerRef}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative w-full rounded-3xl overflow-hidden glass-panel border border-[#5C3A21]/15 shadow-warm select-none transition-all duration-500 ${
-        isFullscreen
-          ? 'fixed inset-4 z-50 h-[calc(100vh-2rem)] rounded-3xl shadow-warm-lg'
-          : 'h-[390px] sm:h-[520px] lg:h-[660px] xl:h-[720px]'
-      }`}
+      className="relative w-full h-[390px] sm:h-[520px] lg:h-[660px] xl:h-[720px] rounded-3xl overflow-hidden glass-panel border border-[#5C3A21]/15 shadow-warm select-none transition-all duration-500"
     >
       {/* Hidden File Input for External .GLB / .GLTF Import */}
       <input
@@ -417,15 +404,6 @@ export function Stage3D({
           </p>
         </div>
       )}
-
-      {/* Fullscreen Toggle Button */}
-      <button
-        onClick={toggleFullscreen}
-        className="absolute top-4 right-4 z-30 p-2.5 rounded-full glass-panel border border-[#5C3A21]/15 text-[#5C3A21] hover:bg-white transition-all shadow-xs"
-        title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen 3D Studio Salon'}
-      >
-        {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-      </button>
 
       {/* Floating 3D Controls HUD */}
       <CameraHUD
