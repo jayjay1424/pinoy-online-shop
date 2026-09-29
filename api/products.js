@@ -1,5 +1,6 @@
 import { query } from './_lib/db.js';
 import { getAuthUser, setSecurityHeaders, checkRateLimit, sanitizeInput } from './_lib/security.js';
+import { PRODUCTS } from '../src/data/products.js';
 
 function mapProductRow(p) {
   if (!p) return null;
@@ -97,7 +98,7 @@ export default async function handler(req, res) {
     // 1. GET: Fetch all products or single product by query ?id=
     // -------------------------------------------------------------
     if (req.method === 'GET') {
-      const { id, collection } = req.query || {};
+      const { id, collection, seed } = req.query || {};
 
       if (id) {
         const result = await query('SELECT * FROM products WHERE id = $1', [id]);
@@ -107,7 +108,52 @@ export default async function handler(req, res) {
         return res.status(200).json({ success: true, product: mapProductRow(result.rows[0]) });
       }
 
-      const result = await query('SELECT * FROM products ORDER BY created_at DESC');
+      let result = await query('SELECT * FROM products ORDER BY created_at DESC');
+
+      // If database has 0 products or seed=true is requested, automatically seed all 18 catalog products
+      if (result.rows.length === 0 || seed === 'true') {
+        for (const p of PRODUCTS) {
+          try {
+            await query(
+              `INSERT INTO products (
+                id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
+                stock_status, lead_time, region, artisan_cooperative, artisan_master,
+                fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
+                description, specs, materials, camera_presets
+              ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+              ON CONFLICT (id) DO NOTHING`,
+              [
+                p.id,
+                p.name,
+                p.subtitle || '',
+                p.collection || 'Kasuotan & Sutla',
+                p.tagline || '',
+                p.pricePHP || 45000,
+                p.edition || 'Edisyon Limitado',
+                p.batchRemaining ?? 3,
+                p.stockStatus || 'available',
+                p.leadTime || 'Handcrafted',
+                p.region || 'Philippines',
+                p.artisanCooperative || 'Artisan Cooperative',
+                p.artisanMaster || 'Master Artisan',
+                p.fairTradePercentage ?? 45,
+                p.has3DModel ?? false,
+                p.modelType || 'bayong',
+                p.modelGlbUrl || '',
+                p.image || '',
+                p.description || '',
+                JSON.stringify(p.specs || []),
+                JSON.stringify(p.materials || []),
+                JSON.stringify(p.cameraPresets || []),
+              ]
+            );
+          } catch (seedErr) {
+            console.warn('[Seed Error]:', seedErr.message);
+          }
+        }
+        result = await query('SELECT * FROM products ORDER BY created_at DESC');
+      }
+
       let products = result.rows.map(mapProductRow);
 
       if (collection && collection !== 'All') {
@@ -230,7 +276,7 @@ export default async function handler(req, res) {
     }
 
     // -------------------------------------------------------------
-    // 3. PUT: Update an existing piece (Admin CRUD)
+    // 3. PUT: Update or Upsert an existing piece (Admin CRUD)
     // -------------------------------------------------------------
     if (req.method === 'PUT') {
       const payload = req.body || {};
@@ -240,49 +286,100 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Product ID is required for updates.' });
       }
 
-      const updateRes = await query(
-        `UPDATE products SET
-          name = $1, subtitle = $2, collection = $3, tagline = $4, price_php = $5,
-          edition = $6, batch_remaining = $7, stock_status = $8, lead_time = $9,
-          region = $10, artisan_cooperative = $11, artisan_master = $12,
-          fair_trade_percentage = $13, has_3d_model = $14, model_type = $15,
-          model_glb_url = $16, image = $17, description = $18, specs = $19,
-          materials = $20, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $21
+      // Fetch existing product first to allow safe partial updates
+      let existing = null;
+      try {
+        const findRes = await query('SELECT * FROM products WHERE id = $1', [id]);
+        if (findRes.rows.length > 0) {
+          existing = findRes.rows[0];
+        }
+      } catch (err) {}
+
+      const name = payload.name ?? existing?.name ?? 'Artisanal Masterwork';
+      const subtitle = payload.subtitle ?? existing?.subtitle ?? '';
+      const collection = payload.collection ?? existing?.collection ?? 'Habi & Dahon';
+      const tagline = payload.tagline ?? existing?.tagline ?? '';
+      const pricePHP = Number(payload.pricePHP ?? payload.price_php ?? existing?.price_php ?? 45000);
+      const edition = payload.edition ?? existing?.edition ?? 'Edisyon Limitado';
+      const batchRemaining = Number(payload.batchRemaining ?? payload.batch_remaining ?? existing?.batch_remaining ?? 3);
+      const stockStatus = payload.stockStatus ?? payload.stock_status ?? (batchRemaining === 0 ? 'archived' : (existing?.stock_status || 'available'));
+      const leadTime = payload.leadTime ?? payload.lead_time ?? existing?.lead_time ?? 'Handcrafted in 18 days';
+      const region = payload.region ?? existing?.region ?? 'Philippine Archipelago';
+      const artisanCooperative = payload.artisanCooperative ?? payload.artisan_cooperative ?? existing?.artisan_cooperative ?? 'Master Philippine Guild';
+      const artisanMaster = payload.artisanMaster ?? payload.artisan_master ?? existing?.artisan_master ?? 'Master Artisan';
+      const fairTradePercentage = Number(payload.fairTradePercentage ?? payload.fair_trade_percentage ?? existing?.fair_trade_percentage ?? 45);
+      const has3DModel = Boolean(payload.has3DModel ?? payload.has_3d_model ?? existing?.has_3d_model);
+      const modelType = payload.modelType ?? payload.model_type ?? existing?.model_type ?? 'bayong';
+      const modelGlbUrl = payload.modelGlbUrl ?? payload.model_glb_url ?? existing?.model_glb_url ?? '';
+      const image = payload.image ?? existing?.image ?? '';
+      const description = payload.description ?? existing?.description ?? '';
+      const specs = payload.specs ?? existing?.specs ?? [];
+      const materials = payload.materials ?? existing?.materials ?? [];
+      const cameraPresets = payload.cameraPresets ?? payload.camera_presets ?? existing?.camera_presets ?? [];
+
+      const upsertRes = await query(
+        `INSERT INTO products (
+          id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
+          stock_status, lead_time, region, artisan_cooperative, artisan_master,
+          fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
+          description, specs, materials, camera_presets
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+        )
+        ON CONFLICT (id) DO UPDATE SET
+          name = EXCLUDED.name,
+          subtitle = EXCLUDED.subtitle,
+          collection = EXCLUDED.collection,
+          tagline = EXCLUDED.tagline,
+          price_php = EXCLUDED.price_php,
+          edition = EXCLUDED.edition,
+          batch_remaining = EXCLUDED.batch_remaining,
+          stock_status = EXCLUDED.stock_status,
+          lead_time = EXCLUDED.lead_time,
+          region = EXCLUDED.region,
+          artisan_cooperative = EXCLUDED.artisan_cooperative,
+          artisan_master = EXCLUDED.artisan_master,
+          fair_trade_percentage = EXCLUDED.fair_trade_percentage,
+          has_3d_model = EXCLUDED.has_3d_model,
+          model_type = EXCLUDED.model_type,
+          model_glb_url = EXCLUDED.model_glb_url,
+          image = EXCLUDED.image,
+          description = EXCLUDED.description,
+          specs = EXCLUDED.specs,
+          materials = EXCLUDED.materials,
+          camera_presets = EXCLUDED.camera_presets,
+          updated_at = CURRENT_TIMESTAMP
         RETURNING *`,
         [
-          payload.name,
-          payload.subtitle || '',
-          payload.collection,
-          payload.tagline || '',
-          Number(payload.pricePHP ?? payload.price_php ?? (payload.price && payload.price.PHP) ?? 45000),
-          payload.edition || '',
-          Number(payload.batchRemaining ?? payload.batch_remaining ?? 0),
-          payload.stockStatus ?? payload.stock_status ?? 'available',
-          payload.leadTime ?? payload.lead_time ?? '',
-          payload.region || '',
-          payload.artisanCooperative ?? payload.artisan_cooperative ?? '',
-          payload.artisanMaster ?? payload.artisan_master ?? '',
-          Number(payload.fairTradePercentage ?? payload.fair_trade_percentage ?? 45),
-          Boolean(payload.has3DModel ?? payload.has_3d_model),
-          payload.modelType ?? payload.model_type ?? 'bayong',
-          payload.modelGlbUrl ?? payload.model_glb_url ?? '',
-          payload.image || '',
-          payload.description || '',
-          JSON.stringify(payload.specs || []),
-          JSON.stringify(payload.materials || []),
           id,
+          name,
+          subtitle,
+          collection,
+          tagline,
+          pricePHP,
+          edition,
+          batchRemaining,
+          stockStatus,
+          leadTime,
+          region,
+          artisanCooperative,
+          artisanMaster,
+          fairTradePercentage,
+          has3DModel,
+          modelType,
+          modelGlbUrl,
+          image,
+          description,
+          JSON.stringify(specs),
+          JSON.stringify(materials),
+          JSON.stringify(cameraPresets),
         ]
       );
 
-      if (updateRes.rows.length === 0) {
-        return res.status(404).json({ error: 'Product not found.' });
-      }
-
       return res.status(200).json({
         success: true,
-        message: 'Masterwork updated in PostgreSQL.',
-        product: mapProductRow(updateRes.rows[0]),
+        message: 'Masterwork updated in PostgreSQL vault.',
+        product: mapProductRow(upsertRes.rows[0]),
       });
     }
 

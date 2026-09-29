@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ShoppingBag, ChevronDown, ChevronUp, Sparkles, Check, Heart, Shield, Award, CreditCard, Info } from 'lucide-react';
 import { CURRENCY_RATES } from '../data/products';
 import { sound } from '../utils/sound';
@@ -71,15 +71,15 @@ export function ProductInfo({
       </div>
 
       {/* Product Title */}
-      <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#24140E] tracking-tight leading-[1.1] mb-1.5">
+      <h1 className="font-serif text-2xl sm:text-4xl lg:text-5xl font-semibold text-[#24140E] tracking-tight leading-[1.1] mb-1.5">
         {product.name}
       </h1>
-      <p className="text-sm sm:text-base text-[#6E5D53] font-serif italic mb-4">
+      <p className="text-xs sm:text-base text-[#6E5D53] font-serif italic mb-4">
         {product.subtitle}
       </p>
 
       {/* Price & Scarcity Indicator */}
-      <div className="flex items-baseline gap-4 pb-2 mb-2 border-b border-[#5C3A21]/15">
+      <div className="flex flex-wrap items-baseline gap-2 sm:gap-4 pb-2 mb-2 border-b border-[#5C3A21]/15">
         <span className="text-2xl sm:text-3xl font-semibold text-[#24140E] tracking-tight">
           {formattedPrice}
         </span>
@@ -97,10 +97,10 @@ export function ProductInfo({
       </div>
 
       {/* 0% Luxury Installment Widget */}
-      <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#5C3A21]/15 text-xs text-[#6E5D53]">
+      <div className="flex flex-wrap items-center justify-between gap-1.5 pb-3 mb-4 border-b border-[#5C3A21]/15 text-xs text-[#6E5D53]">
         <div className="flex items-center gap-1.5">
-          <CreditCard className="w-3.5 h-3.5 text-[#8C5A3C]" />
-          <span>Or <strong>{rateInfo.symbol} {monthly12.toLocaleString()} / mo</strong> for 12 mos with 0% interest</span>
+          <CreditCard className="w-3.5 h-3.5 text-[#8C5A3C] shrink-0" />
+          <span className="text-[11px] sm:text-xs">Or <strong>{rateInfo.symbol} {monthly12.toLocaleString()} / mo</strong> for 12 mos with 0% interest</span>
         </div>
         <button
           onClick={() => { sound.playBrassClick(); setInstallmentInfoOpen(!installmentInfoOpen); }}
@@ -268,7 +268,7 @@ export function ProductInfo({
         <button
           onClick={handleAdd}
           disabled={isSoldOut}
-          className={`flex-1 py-3.5 px-6 rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 shadow-warm hover:shadow-warm-lg active:scale-98 ${
+          className={`flex-1 py-3 sm:py-3.5 px-3 sm:px-6 rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 shadow-warm hover:shadow-warm-lg active:scale-98 min-w-0 ${
             isSoldOut
               ? 'bg-stone-300 text-stone-500 border border-stone-400/40 cursor-not-allowed'
               : addedAnimation
@@ -277,16 +277,16 @@ export function ProductInfo({
           }`}
         >
           {isSoldOut ? (
-            <span>Sold Out — Closed Harvest</span>
+            <span>Sold Out</span>
           ) : addedAnimation ? (
             <>
-              <Check className="w-4 h-4 text-[#C4975D]" />
-              <span>Added to Atelier Bag (15m Lock Active)</span>
+              <Check className="w-4 h-4 text-[#C4975D] shrink-0" />
+              <span className="truncate">Added to Atelier Bag</span>
             </>
           ) : (
             <>
-              <ShoppingBag className="w-4 h-4 text-[#C4975D]" />
-              <span>Acquire Piece • {formattedPrice}</span>
+              <ShoppingBag className="w-4 h-4 text-[#C4975D] shrink-0" />
+              <span className="truncate">Acquire • {formattedPrice}</span>
             </>
           )}
         </button>
@@ -297,7 +297,7 @@ export function ProductInfo({
               sound.playBrassClick();
               onOpenConcierge();
             }}
-            className="p-3.5 rounded-full border border-[#5C3A21]/20 bg-white text-[#5C3A21] hover:bg-[#FAF8F5] hover:text-[#24140E] transition-all shadow-xs"
+            className="p-3 sm:p-3.5 rounded-full border border-[#5C3A21]/20 bg-white text-[#5C3A21] hover:bg-[#FAF8F5] hover:text-[#24140E] transition-all shadow-xs shrink-0"
             title="Inquire with AI Concierge about this Masterwork"
             aria-label="Ask Concierge"
           >
@@ -310,7 +310,7 @@ export function ProductInfo({
             sound.playBrassClick();
             setIsWishlisted(!isWishlisted);
           }}
-          className={`p-3.5 rounded-full border transition-all ${
+          className={`p-3 sm:p-3.5 rounded-full border transition-all shrink-0 ${
             isWishlisted
               ? 'bg-rose-50 border-rose-200 text-rose-600'
               : 'border-[#5C3A21]/20 bg-white text-[#6E5D53] hover:text-[#24140E] hover:bg-[#FAF8F5]'

@@ -70,6 +70,7 @@ export function CuratorStudioPage({
   onUpdateProduct,
   onDeleteProduct,
   onNavigateToStorefront,
+  onRefreshProducts,
   activeCurrency = 'PHP',
 }) {
   // Authentication & Brute-force State
@@ -98,6 +99,44 @@ export function CuratorStudioPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCollection, setFilterCollection] = useState('All');
   const [filterStock, setFilterStock] = useState('All');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Quick In-line Stock Adjustment Handler
+  const handleQuickStockChange = async (prod, delta) => {
+    sound.playBrassClick();
+    const curStock = typeof prod.batchRemaining === 'number'
+      ? prod.batchRemaining
+      : (typeof prod.batch_remaining === 'number' ? prod.batch_remaining : 3);
+    const newStock = Math.max(0, curStock + delta);
+    const updatedProd = {
+      ...prod,
+      batchRemaining: newStock,
+      batch_remaining: newStock,
+      stockStatus: newStock === 0 ? 'archived' : 'available',
+      stock_status: newStock === 0 ? 'archived' : 'available',
+    };
+    try {
+      await onUpdateProduct(updatedProd);
+      setFeedbackMsg(`✓ Stock for "${prod.name}" updated to ${newStock} pieces in database.`);
+    } catch (err) {
+      console.warn('Quick stock update failed:', err);
+    }
+  };
+
+  const handleRefresh = async (forceSeed = false) => {
+    if (!onRefreshProducts) return;
+    setIsRefreshing(true);
+    sound.playBrassClick();
+    try {
+      await onRefreshProducts(forceSeed);
+      setFeedbackMsg(forceSeed ? '✓ Database synchronized & seeded with all 18 masterworks.' : '✓ Vault catalog refreshed from live database.');
+      sound.playSuccessChime();
+    } catch (e) {
+      console.warn('Refresh error:', e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Editor Form State
   const [editingId, setEditingId] = useState(null); // null = new, string = existing
@@ -691,8 +730,19 @@ export function CuratorStudioPage({
           </div>
 
           {/* Right Action Cluster */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Sync Live Database Button */}
+            <button
+              onClick={() => handleRefresh(false)}
+              disabled={isRefreshing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-amber-200 hover:text-white bg-amber-950/40 hover:bg-amber-900 border border-amber-800/40 transition-all shadow-xs"
+              title="Fetch latest inventory & stock from PostgreSQL database"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-[#C4975D] ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Sync DB</span>
+            </button>
+
             {/* Return to Customer Storefront */}
             <button
               onClick={onNavigateToStorefront}
@@ -865,25 +915,51 @@ export function CuratorStudioPage({
                           {p.collection}
                         </span>
 
-                        <span
-                          className={`text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full font-bold border ${
-                            isSoldOut
-                              ? 'bg-stone-100 text-stone-600 border-stone-300'
-                              : isCommission
-                              ? 'bg-purple-50 text-purple-800 border-purple-200'
-                              : isLowStock
-                              ? 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse'
-                              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          }`}
-                        >
-                          {isSoldOut
-                            ? 'Sold Out'
-                            : isCommission
-                            ? 'Commission'
-                            : isLowStock
-                            ? `Low Stock (${p.batchRemaining})`
-                            : `In Stock (${p.batchRemaining || 3})`}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full font-bold border ${
+                              isSoldOut
+                                ? 'bg-stone-100 text-stone-600 border-stone-300'
+                                : isCommission
+                                ? 'bg-purple-50 text-purple-800 border-purple-200'
+                                : isLowStock
+                                ? 'bg-amber-50 text-amber-900 border-amber-300 animate-pulse'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            }`}
+                          >
+                            {isSoldOut ? 'Sold Out' : isCommission ? 'Commission' : `${p.batchRemaining ?? 3} left`}
+                          </span>
+
+                          {/* Quick 1-Click In-line Stock Stepper */}
+                          <div className="flex items-center bg-white rounded-lg border border-[#5C3A21]/20 shadow-2xs overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickStockChange(p, -1);
+                              }}
+                              disabled={p.batchRemaining <= 0}
+                              className="w-5 h-5 flex items-center justify-center text-xs font-bold text-[#5C3A21] hover:bg-stone-100 disabled:opacity-30 transition-colors"
+                              title="Decrease stock by 1"
+                            >
+                              −
+                            </button>
+                            <span className="w-5 text-center text-[10px] font-mono font-bold text-[#24140E]">
+                              {p.batchRemaining ?? 3}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleQuickStockChange(p, 1);
+                              }}
+                              className="w-5 h-5 flex items-center justify-center text-xs font-bold text-[#5C3A21] hover:bg-stone-100 transition-colors"
+                              title="Increase stock by 1"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Image Preview Thumbnail */}
@@ -1452,6 +1528,29 @@ export function CuratorStudioPage({
                   <span className="text-[11px] text-[#8C5A3C]">
                     Key `likha_catalog_items` synced ({products.length} masterworks cached).
                   </span>
+                </div>
+              </div>
+
+              {/* Database Force-Sync & Seed Action */}
+              <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300/80 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-xs uppercase text-[#24140E] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#C4975D]" />
+                      <span>PostgreSQL Live Sync & Catalog Seeding</span>
+                    </h4>
+                    <p className="text-[11px] text-[#6E5D53] mt-0.5">
+                      Force sync and seed all 18 Philippine masterworks directly into your PostgreSQL database tables.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleRefresh(true)}
+                    disabled={isRefreshing}
+                    className="px-4 py-2 rounded-xl bg-[#5C3A21] hover:bg-[#3E2315] text-[#FAF8F5] text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-[#C4975D] ${isRefreshing ? 'animate-spin' : ''}`} />
+                    <span>{isRefreshing ? 'Syncing...' : 'Seed & Sync DB'}</span>
+                  </button>
                 </div>
               </div>
 

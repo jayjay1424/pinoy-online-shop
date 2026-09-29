@@ -193,12 +193,12 @@ export function CheckoutModal({
           handleClose();
         }
       }}
-      className="fixed inset-0 z-50 overflow-y-auto bg-[#24140E]/60 backdrop-blur-md flex items-center justify-center p-4 select-none animate-fadeIn"
+      className="fixed inset-0 z-50 overflow-y-auto bg-[#24140E]/60 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 select-none animate-fadeIn"
     >
-      <div className="relative w-full max-w-2xl bg-[#FAF8F5] rounded-3xl border border-[#5C3A21]/20 shadow-warm-lg overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-[#FAF8F5] rounded-2xl sm:rounded-3xl border border-[#5C3A21]/20 shadow-warm-lg overflow-hidden my-auto max-h-[96vh] flex flex-col">
         
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 border-b border-[#5C3A21]/15 flex items-center justify-between bg-white">
+        <div className="p-4 sm:p-6 border-b border-[#5C3A21]/15 flex items-center justify-between bg-white shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-[#FAF8F5] border border-[#5C3A21]/20 flex items-center justify-center font-serif font-bold text-[#5C3A21]">
               {useBaybayin ? 'ᜎ' : 'L'}
@@ -259,7 +259,7 @@ export function CheckoutModal({
 
         {/* Step 1: Client Shipping & Delivery Coordinates */}
         {step === 'details' && (
-          <div className="p-5 sm:p-6 space-y-4">
+          <div className="p-4 sm:p-6 space-y-4 overflow-y-auto max-h-[calc(96vh-80px)]">
             <div className="flex items-center justify-between pb-2 border-b border-[#5C3A21]/10">
               <span className="text-xs uppercase tracking-wider font-bold text-[#24140E]">
                 1. Delivery Coordinates & Client Details
@@ -344,7 +344,7 @@ export function CheckoutModal({
 
         {/* Step 2: Paymode Selection & Dynamic QR Ph / Card Screen */}
         {step === 'paymode' && (
-          <div className="p-5 sm:p-6 space-y-4">
+          <div className="p-4 sm:p-6 space-y-4 overflow-y-auto max-h-[calc(96vh-80px)]">
             <div className="flex items-center justify-between pb-2 border-b border-[#5C3A21]/10">
               <button
                 onClick={() => {

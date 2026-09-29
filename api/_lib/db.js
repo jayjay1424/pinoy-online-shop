@@ -275,49 +275,44 @@ export async function initDatabase() {
       );
     }
 
-    // Seed default heritage products if table is empty or missing any default masterworks
-    const prodCountRes = await client.query('SELECT count(*) as count FROM products');
-    const existingCount = Number(prodCountRes.rows[0]?.count || 0);
-    if (existingCount === 0) {
-      for (const p of PRODUCTS) {
-        await client.query(
-          `INSERT INTO products (
-            id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
-            stock_status, lead_time, region, artisan_cooperative, artisan_master,
-            fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
-            description, specs, materials, camera_presets
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
-          ON CONFLICT (id) DO NOTHING`,
-          [
-            p.id,
-            p.name,
-            p.subtitle || '',
-            p.collection || 'Kasuotan & Sutla',
-            p.tagline || '',
-            p.pricePHP || 45000,
-            p.edition || 'Edisyon Limitado',
-            p.batchRemaining ?? 3,
-            p.stockStatus || 'available',
-            p.leadTime || 'Handcrafted',
-            p.region || 'Philippines',
-            p.artisanCooperative || 'Artisan Cooperative',
-            p.artisanMaster || 'Master Artisan',
-            p.fairTradePercentage ?? 45,
-            p.has3DModel ?? false,
-            p.modelType || 'bayong',
-            p.modelGlbUrl || '',
-            p.image || '',
-            p.description || '',
-            JSON.stringify(p.specs || []),
-            JSON.stringify(p.materials || []),
-            JSON.stringify(p.cameraPresets || []),
-          ]
-        );
-      }
-    } else {
-      // Clean up any test barong products if present
-      await client.query("DELETE FROM products WHERE id IN ('barong-ilustrado', 'barong-dalisay')");
+    // Always ensure all heritage catalog masterworks are seeded into PostgreSQL
+    for (const p of PRODUCTS) {
+      await client.query(
+        `INSERT INTO products (
+          id, name, subtitle, collection, tagline, price_php, edition, batch_remaining,
+          stock_status, lead_time, region, artisan_cooperative, artisan_master,
+          fair_trade_percentage, has_3d_model, model_type, model_glb_url, image,
+          description, specs, materials, camera_presets
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+        ON CONFLICT (id) DO NOTHING`,
+        [
+          p.id,
+          p.name,
+          p.subtitle || '',
+          p.collection || 'Kasuotan & Sutla',
+          p.tagline || '',
+          p.pricePHP || 45000,
+          p.edition || 'Edisyon Limitado',
+          p.batchRemaining ?? 3,
+          p.stockStatus || 'available',
+          p.leadTime || 'Handcrafted',
+          p.region || 'Philippines',
+          p.artisanCooperative || 'Artisan Cooperative',
+          p.artisanMaster || 'Master Artisan',
+          p.fairTradePercentage ?? 45,
+          p.has3DModel ?? false,
+          p.modelType || 'bayong',
+          p.modelGlbUrl || '',
+          p.image || '',
+          p.description || '',
+          JSON.stringify(p.specs || []),
+          JSON.stringify(p.materials || []),
+          JSON.stringify(p.cameraPresets || []),
+        ]
+      );
     }
+    // Clean up deprecated test products if present
+    await client.query("DELETE FROM products WHERE id IN ('barong-ilustrado', 'barong-dalisay')");
 
     isInitialized = true;
   } catch (err) {
@@ -506,31 +501,55 @@ function handleInMemoryQuery(text, params) {
 
   // 11. UPDATE products
   if (normalized.startsWith('update products')) {
+    // Check if query is stock deduction from orders.js:
+    if (normalized.includes('batch_remaining = greatest(0')) {
+      const qty = Number(params[0] || 1);
+      const id = params[1];
+      const existingIdx = inMemoryStore.products.findIndex((p) => p.id === id);
+      if (existingIdx >= 0) {
+        const cur = inMemoryStore.products[existingIdx];
+        const prevStock = typeof cur.batchRemaining === 'number'
+          ? cur.batchRemaining
+          : (typeof cur.batch_remaining === 'number' ? cur.batch_remaining : 3);
+        const newStock = Math.max(0, prevStock - qty);
+        cur.batchRemaining = newStock;
+        cur.batch_remaining = newStock;
+        if (newStock === 0) {
+          cur.stockStatus = 'archived';
+          cur.stock_status = 'archived';
+        }
+        cur.updated_at = new Date();
+        return { rows: [{ ...cur }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    }
+
     const id = params[params.length - 1];
     const existingIdx = inMemoryStore.products.findIndex((p) => p.id === id);
     if (existingIdx >= 0) {
+      const cur = inMemoryStore.products[existingIdx];
       const updated = {
-        ...inMemoryStore.products[existingIdx],
-        name: params[0],
-        subtitle: params[1],
-        collection: params[2],
-        tagline: params[3],
-        pricePHP: Number(params[4]),
-        edition: params[5],
-        batchRemaining: Number(params[6]),
-        stockStatus: params[7],
-        leadTime: params[8],
-        region: params[9],
-        artisanCooperative: params[10],
-        artisanMaster: params[11],
-        fairTradePercentage: Number(params[12]),
-        has3DModel: Boolean(params[13]),
-        modelType: params[14],
-        modelGlbUrl: params[15],
-        image: params[16],
-        description: params[17],
-        specs: typeof params[18] === 'string' ? JSON.parse(params[18] || '[]') : params[18],
-        materials: typeof params[19] === 'string' ? JSON.parse(params[19] || '[]') : params[19],
+        ...cur,
+        name: params[0] !== undefined ? params[0] : cur.name,
+        subtitle: params[1] !== undefined ? params[1] : cur.subtitle,
+        collection: params[2] !== undefined ? params[2] : cur.collection,
+        tagline: params[3] !== undefined ? params[3] : cur.tagline,
+        pricePHP: params[4] !== undefined ? Number(params[4]) : cur.pricePHP,
+        edition: params[5] !== undefined ? params[5] : cur.edition,
+        batchRemaining: params[6] !== undefined ? Number(params[6]) : cur.batchRemaining,
+        stockStatus: params[7] !== undefined ? params[7] : cur.stockStatus,
+        leadTime: params[8] !== undefined ? params[8] : cur.leadTime,
+        region: params[9] !== undefined ? params[9] : cur.region,
+        artisanCooperative: params[10] !== undefined ? params[10] : cur.artisanCooperative,
+        artisanMaster: params[11] !== undefined ? params[11] : cur.artisanMaster,
+        fairTradePercentage: params[12] !== undefined ? Number(params[12]) : cur.fairTradePercentage,
+        has3DModel: params[13] !== undefined ? Boolean(params[13]) : cur.has3DModel,
+        modelType: params[14] !== undefined ? params[14] : cur.modelType,
+        modelGlbUrl: params[15] !== undefined ? params[15] : cur.modelGlbUrl,
+        image: params[16] !== undefined ? params[16] : cur.image,
+        description: params[17] !== undefined ? params[17] : cur.description,
+        specs: params[18] ? (typeof params[18] === 'string' ? JSON.parse(params[18] || '[]') : params[18]) : cur.specs,
+        materials: params[19] ? (typeof params[19] === 'string' ? JSON.parse(params[19] || '[]') : params[19]) : cur.materials,
         updated_at: new Date(),
       };
       inMemoryStore.products[existingIdx] = updated;

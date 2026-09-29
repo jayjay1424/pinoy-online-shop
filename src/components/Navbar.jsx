@@ -117,7 +117,7 @@ export function Navbar({
           </nav>
 
           {/* Right Action Cluster */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             
             {/* Virtual Unboxing Trigger */}
             <button
@@ -129,8 +129,8 @@ export function Navbar({
               <span>Unboxing Ritual</span>
             </button>
 
-            {/* Currency Selector */}
-            <div className="relative">
+            {/* Currency Selector (Desktop / Tablet) */}
+            <div className="relative hidden sm:block">
               <button
                 onClick={() => { sound.playBrassClick(); setCurrencyDropdown(!currencyDropdown); }}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold text-[#24140E] hover:bg-[#FAF8F5] transition-colors border border-[#5C3A21]/15"
@@ -164,7 +164,7 @@ export function Navbar({
               )}
             </div>
 
-            {/* Client Account / Sign In Trigger */}
+            {/* Client Account / Sign In Trigger (Desktop / Tablet) */}
             <button
               onClick={() => {
                 sound.playBrassClick();
@@ -174,7 +174,7 @@ export function Navbar({
                   onOpenAuth();
                 }
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
+              className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
                 isAuthenticated
                   ? 'bg-amber-50 border-amber-300 text-amber-950 hover:bg-amber-100 shadow-2xs'
                   : 'bg-[#FAF8F5] border-[#5C3A21]/15 text-[#5C3A21] hover:bg-[#5C3A21] hover:text-white'
@@ -199,10 +199,10 @@ export function Navbar({
               )}
             </button>
 
-            {/* Sound Toggle */}
+            {/* Sound Toggle (Desktop / Tablet) */}
             <button
               onClick={toggleSound}
-              className={`p-2 rounded-full border transition-all ${
+              className={`hidden sm:flex p-2 rounded-full border transition-all ${
                 audioActive
                   ? 'border-[#5C3A21]/30 text-[#5C3A21] hover:bg-[#FAF8F5]'
                   : 'border-[#5C3A21]/15 text-[#8C5A3C]/60 hover:text-[#24140E]'
@@ -216,13 +216,13 @@ export function Navbar({
             {/* Atelier Bag Trigger */}
             <button
               onClick={() => { sound.playWoodThud(); onOpenCart(); }}
-              className="flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-[#24140E] text-[#FAF8F5] hover:bg-[#341E15] border border-[#C4975D]/40 active:scale-95 transition-all shadow-warm hover:shadow-warm-lg group"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-[#24140E] text-[#FAF8F5] hover:bg-[#341E15] border border-[#C4975D]/40 active:scale-95 transition-all shadow-warm hover:shadow-warm-lg group"
               aria-label="Open Atelier Bag"
             >
               <ShoppingBag className="w-4 h-4 text-[#C4975D] group-hover:scale-110 transition-transform" />
-              <span className="text-xs font-bold tracking-widest uppercase">BAG</span>
+              <span className="text-[11px] sm:text-xs font-bold tracking-widest uppercase">BAG</span>
               {cartCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-[#C4975D] text-[#24140E] text-[10px] font-bold flex items-center justify-center -ml-0.5 animate-pulse shadow-xs">
+                <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[#C4975D] text-[#24140E] text-[9px] sm:text-[10px] font-bold flex items-center justify-center -ml-0.5 animate-pulse shadow-xs">
                   {cartCount}
                 </span>
               )}
@@ -245,7 +245,48 @@ export function Navbar({
 
         {/* Mobile Dropdown Navigation Drawer */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-2 max-w-7xl mx-auto glass-panel rounded-3xl p-5 border border-[#5C3A21]/20 shadow-warm-lg animate-fadeIn text-xs space-y-3">
+          <div className="md:hidden mt-2 max-w-7xl mx-auto glass-panel rounded-3xl p-4 sm:p-5 border border-[#5C3A21]/20 shadow-warm-lg animate-fadeIn text-xs space-y-3">
+            
+            {/* Mobile Account, Currency & Sound Bar */}
+            <div className="flex items-center justify-between gap-2 p-2.5 rounded-2xl bg-white/80 border border-[#5C3A21]/15">
+              <button
+                onClick={() => {
+                  sound.playBrassClick();
+                  setIsMobileMenuOpen(false);
+                  if (isAuthenticated) onOpenAccount();
+                  else onOpenAuth();
+                }}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#24140E] truncate"
+              >
+                <User className="w-4 h-4 text-[#C4975D]" />
+                <span className="truncate">{isAuthenticated ? currentUser.name : 'Sign In / Register'}</span>
+              </button>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Mobile Currency Selector */}
+                <select
+                  value={activeCurrency}
+                  onChange={(e) => {
+                    sound.playBrassClick();
+                    onCurrencyChange(e.target.value);
+                  }}
+                  className="bg-[#FAF8F5] border border-[#5C3A21]/20 rounded-lg px-2 py-1 text-[11px] font-mono font-bold text-[#24140E]"
+                >
+                  {Object.keys(CURRENCY_RATES).map((curr) => (
+                    <option key={curr} value={curr}>{curr}</option>
+                  ))}
+                </select>
+
+                {/* Mobile Sound Toggle */}
+                <button
+                  onClick={toggleSound}
+                  className="p-1.5 rounded-lg border border-[#5C3A21]/20 text-[#5C3A21]"
+                  title="Toggle Audio"
+                >
+                  {audioActive ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
             <button
               onClick={() => {
                 sound.playBrassClick();

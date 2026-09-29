@@ -68,8 +68,8 @@ export function CatalogGrid({
         </p>
       </div>
 
-      {/* Category Filter Tabs */}
-      <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+      {/* Category Filter Tabs (Swipeable on mobile) */}
+      <div className="flex overflow-x-auto sm:flex-wrap items-center sm:justify-center gap-2 mb-8 sm:mb-10 no-scrollbar pb-1 px-1">
         {categories.map((cat) => (
           <button
             key={cat}
@@ -77,7 +77,7 @@ export function CatalogGrid({
               sound.playBrassClick();
               setActiveCategory(cat);
             }}
-            className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all ${
+            className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all whitespace-nowrap shrink-0 ${
               activeCategory === cat
                 ? 'bg-[#24140E] text-[#EAD7B2] border border-[#C4975D]/50 shadow-warm ring-1 ring-[#C4975D]/30'
                 : 'bg-white/85 text-[#5C3A21] border border-[#5C3A21]/15 hover:bg-white hover:border-[#5C3A21]/35'
@@ -89,7 +89,7 @@ export function CatalogGrid({
       </div>
 
       {/* Search & Sort Controls Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-10 max-w-4xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-8 sm:mb-10 max-w-4xl mx-auto">
         {/* Search Bar */}
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-[#8C5A3C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -115,24 +115,26 @@ export function CatalogGrid({
         </div>
 
         {/* Sort Dropdown & Counter */}
-        <div className="flex items-center gap-2 shrink-0 justify-end">
+        <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0">
           <span className="text-[11px] text-[#8C5A3C] font-mono mr-1">
             {processedProducts.length} {processedProducts.length === 1 ? 'piece' : 'masterworks'}
           </span>
-          <SlidersHorizontal className="w-3.5 h-3.5 text-[#8C5A3C]" />
-          <select
-            value={sortBy}
-            onChange={(e) => {
-              sound.playBrassClick();
-              setSortBy(e.target.value);
-            }}
-            className="px-3.5 py-2 bg-white border border-[#5C3A21]/20 rounded-full text-xs text-[#24140E] font-semibold focus:outline-none focus:ring-1 focus:ring-[#C4975D] shadow-2xs cursor-pointer"
-          >
-            <option value="curated">Curated Order</option>
-            <option value="price_asc">Valuation: Low to High</option>
-            <option value="price_desc">Valuation: High to Low</option>
-            <option value="fairtrade">Fair-Trade Guild %</option>
-          </select>
+          <div className="flex items-center gap-1.5">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#8C5A3C]" />
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                sound.playBrassClick();
+                setSortBy(e.target.value);
+              }}
+              className="px-3 py-1.5 sm:px-3.5 sm:py-2 bg-white border border-[#5C3A21]/20 rounded-full text-xs text-[#24140E] font-semibold focus:outline-none focus:ring-1 focus:ring-[#C4975D] shadow-2xs cursor-pointer"
+            >
+              <option value="curated">Curated Order</option>
+              <option value="price_asc">Valuation: Low to High</option>
+              <option value="price_desc">Valuation: High to Low</option>
+              <option value="fairtrade">Fair-Trade Guild %</option>
+            </select>
+          </div>
         </div>
       </div>
 

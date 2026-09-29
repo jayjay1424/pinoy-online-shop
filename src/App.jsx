@@ -166,23 +166,36 @@ export function App() {
   const [authNotice, setAuthNotice] = useState('');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
 
-  // Sync with PostgreSQL / Serverless API on mount if available
-  useEffect(() => {
-    fetch('/api/products')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+  // Sync with PostgreSQL / Serverless API on mount and on demand
+  const refreshProducts = async (forceSeed = false) => {
+    try {
+      const url = forceSeed ? '/api/products?seed=true' : '/api/products';
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
         const prods = data?.products || data?.data;
         if (data && data.success && Array.isArray(prods) && prods.length > 0) {
           const normalizedList = prods.map(normalizeProduct);
           setProducts(normalizedList);
+          setActiveProduct((prevActive) => {
+            if (!prevActive) return normalizedList[0];
+            const updatedActive = normalizedList.find((p) => p.id === prevActive.id);
+            return updatedActive || normalizedList[0];
+          });
           try {
             localStorage.setItem('likha_catalog_items', JSON.stringify(normalizedList));
           } catch (e) {}
+          return normalizedList;
         }
-      })
-      .catch((err) => {
-        console.log('Using local catalog cache:', err.message);
-      });
+      }
+    } catch (err) {
+      console.log('Using local catalog cache:', err.message);
+    }
+    return products;
+  };
+
+  useEffect(() => {
+    refreshProducts();
   }, []);
 
   // Handle product change
@@ -359,6 +372,20 @@ export function App() {
           }
           return currentActive;
         });
+
+        // Ensure the order and stock deduction are recorded in PostgreSQL database
+        try {
+          fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData),
+          })
+            .then((r) => r.json())
+            .then(() => refreshProducts())
+            .catch((e) => console.warn('Order sync non-fatal:', e));
+        } catch (err) {
+          console.warn('Order API sync notice:', err);
+        }
       }
     }
   };
@@ -389,6 +416,7 @@ export function App() {
           setProducts((prev) => prev.map((p) => (p.id === finalProd.id ? finalProd : p)));
         }
       }
+      refreshProducts();
     } catch (e) {
       console.warn('API POST failed, saved to local storage cache:', e);
     }
@@ -426,6 +454,7 @@ export function App() {
           setProducts((prev) => prev.map((p) => (p.id === finalProd.id ? finalProd : p)));
         }
       }
+      refreshProducts();
     } catch (e) {
       console.warn('API PUT failed, saved to local storage cache:', e);
     }
@@ -451,6 +480,7 @@ export function App() {
       await fetch(`/api/products?id=${encodeURIComponent(productId)}`, {
         method: 'DELETE',
       });
+      refreshProducts();
     } catch (e) {
       console.warn('API DELETE failed, saved to local storage cache:', e);
     }
@@ -466,6 +496,7 @@ export function App() {
           onUpdateProduct={handleUpdateProduct}
           onDeleteProduct={handleDeleteProduct}
           onNavigateToStorefront={navigateToStorefront}
+          onRefreshProducts={refreshProducts}
           activeCurrency={activeCurrency}
         />
       </React.Suspense>
