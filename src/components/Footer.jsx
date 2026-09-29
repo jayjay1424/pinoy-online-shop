@@ -14,8 +14,8 @@ export function Footer() {
     setTimeout(() => setGazetteSubscribed(false), 4000);
   };
   return (
-    <footer className="bg-[#180D09] text-[#FAF8F5] border-t border-[#C4975D]/30 pt-16 pb-12 px-4 sm:px-8 text-xs">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
+    <footer className="bg-[#180D09] text-[#FAF8F5] border-t border-[#C4975D]/30 pt-16 pb-12 px-4 sm:px-6 lg:px-10 xl:px-12 text-xs">
+      <div className="max-w-[1720px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
         
         {/* Brand Column */}
         <div className="lg:col-span-2 space-y-3">

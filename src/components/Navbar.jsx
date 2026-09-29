@@ -62,8 +62,8 @@ export function Navbar({
         </button>
       </div>
 
-      <div className="px-3 sm:px-8 py-3">
-        <div className="max-w-7xl mx-auto glass-panel rounded-full px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-warm border border-[#5C3A21]/15">
+      <div className="px-3 sm:px-6 lg:px-10 xl:px-12 py-3">
+        <div className="max-w-[1720px] mx-auto glass-panel rounded-full px-4 sm:px-8 py-2.5 flex items-center justify-between shadow-warm border border-[#5C3A21]/15">
           
           {/* Brandmark / Logo with Golden Hallmark */}
           <div className="flex items-center gap-3">

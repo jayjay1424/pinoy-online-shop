@@ -81,6 +81,27 @@ export default async function handler(req, res) {
 
       const orderRecord = insertRes.rows[0];
 
+      // Deduct inventory batch_remaining for each ordered piece
+      if (Array.isArray(items) && items.length > 0) {
+        for (const item of items) {
+          const prodId = item.product?.id || item.productId || item.id;
+          const qty = Math.max(1, Number(item.quantity || 1));
+          if (prodId) {
+            try {
+              await query(
+                `UPDATE products 
+                 SET batch_remaining = GREATEST(0, COALESCE(batch_remaining, 3) - $1),
+                     stock_status = CASE WHEN GREATEST(0, COALESCE(batch_remaining, 3) - $1) = 0 THEN 'archived' ELSE stock_status END
+                 WHERE id = $2`,
+                [qty, prodId]
+              );
+            } catch (stockErr) {
+              console.warn('[Orders API] Inventory stock deduction non-fatal notice:', stockErr.message);
+            }
+          }
+        }
+      }
+
       return res.status(201).json({
         success: true,
         message: 'Masterwork allocation secured and recorded in PostgreSQL vault.',

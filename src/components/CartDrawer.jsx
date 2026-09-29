@@ -25,6 +25,7 @@ export function CartDrawer({
   onClose,
   items,
   onRemoveItem,
+  onUpdateQuantity,
   onProceedToCheckout,
   activeCurrency,
 }) {
@@ -207,10 +208,53 @@ export function CartDrawer({
                       </span>
                     )}
 
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#5C3A21]">
-                        {rateInfo.symbol} {item.price.toLocaleString()}
-                      </span>
+                    <div className="mt-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {onUpdateQuantity && (
+                          <div className="flex items-center bg-[#FAF8F5] border border-[#5C3A21]/20 rounded-lg shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                sound.playBrassClick();
+                                const currentQty = item.quantity || 1;
+                                if (currentQty > 1) {
+                                  onUpdateQuantity(index, currentQty - 1);
+                                } else {
+                                  onRemoveItem(index);
+                                }
+                              }}
+                              className="w-6 h-6 flex items-center justify-center text-[#5C3A21] hover:bg-[#F2ECE4] rounded-l-lg font-bold text-xs"
+                              title="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <span className="w-6 text-center text-xs font-mono font-bold text-[#24140E]">
+                              {item.quantity || 1}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                sound.playBrassClick();
+                                const maxStock = typeof item.product?.batchRemaining === 'number'
+                                  ? item.product.batchRemaining
+                                  : 99;
+                                const currentQty = item.quantity || 1;
+                                if (currentQty < maxStock) {
+                                  onUpdateQuantity(index, currentQty + 1);
+                                }
+                              }}
+                              disabled={(item.quantity || 1) >= (typeof item.product?.batchRemaining === 'number' ? item.product.batchRemaining : 99)}
+                              className="w-6 h-6 flex items-center justify-center text-[#5C3A21] hover:bg-[#F2ECE4] disabled:opacity-30 rounded-r-lg font-bold text-xs"
+                              title="Increase quantity"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                        <span className="text-xs font-bold text-[#5C3A21]">
+                          {rateInfo.symbol} {item.price.toLocaleString()}
+                        </span>
+                      </div>
                       <button
                         onClick={() => {
                           sound.playBrassClick();

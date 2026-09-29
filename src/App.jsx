@@ -197,7 +197,38 @@ export function App() {
 
   // Handle Add to Bag from 3D Hero
   const handleAddToCart = (itemConfig) => {
-    setCart((prev) => [...prev, itemConfig]);
+    setCart((prev) => {
+      const pId = itemConfig.product.id;
+      const matId = itemConfig.selectedMaterial?.id;
+      const mono = itemConfig.monogram || '';
+      const motif = itemConfig.embroideryMotif || '';
+
+      const existingIndex = prev.findIndex(
+        (it) =>
+          it.product.id === pId &&
+          (it.selectedMaterial?.id || null) === (matId || null) &&
+          (it.monogram || '') === mono &&
+          (it.embroideryMotif || '') === motif
+      );
+
+      if (existingIndex > -1) {
+        const copy = [...prev];
+        const currentItem = copy[existingIndex];
+        const maxStock = typeof itemConfig.product.batchRemaining === 'number'
+          ? itemConfig.product.batchRemaining
+          : 99;
+        const newQty = Math.min(maxStock, (currentItem.quantity || 1) + (itemConfig.quantity || 1));
+        const unitPrice = itemConfig.unitPrice || Math.round(itemConfig.price / (itemConfig.quantity || 1));
+        copy[existingIndex] = {
+          ...currentItem,
+          quantity: newQty,
+          price: unitPrice * newQty,
+        };
+        return copy;
+      }
+
+      return [...prev, itemConfig];
+    });
     setIsCartOpen(true);
   };
 
@@ -207,11 +238,31 @@ export function App() {
       product,
       selectedMaterial: product.materials ? product.materials[0] : null,
       monogram: product.modelType === 'bayong' ? monogram : '',
+      unitPrice: price,
+      quantity: 1,
       price,
       currency,
     };
-    setCart((prev) => [...prev, itemConfig]);
-    setIsCartOpen(true);
+    handleAddToCart(itemConfig);
+  };
+
+  // Update Item Quantity in Bag
+  const handleUpdateCartQuantity = (index, newQty) => {
+    setCart((prev) =>
+      prev.map((item, i) => {
+        if (i === index) {
+          const maxStock = typeof item.product?.batchRemaining === 'number' ? item.product.batchRemaining : 99;
+          const clampedQty = Math.max(1, Math.min(maxStock, newQty));
+          const unitPrice = item.unitPrice || Math.round(item.price / (item.quantity || 1));
+          return {
+            ...item,
+            quantity: clampedQty,
+            price: unitPrice * clampedQty,
+          };
+        }
+        return item;
+      })
+    );
   };
 
   // Remove Item from Bag
@@ -234,7 +285,7 @@ export function App() {
     setIsCheckoutOpen(true);
   };
 
-  // Order Completed
+  // Order Completed: Record order and deduct purchased stock from product inventory
   const handleOrderCompleted = (orderData) => {
     // Clear cart after successful order authorization
     setCart([]);
@@ -246,6 +297,69 @@ export function App() {
         } catch (e) {}
         return updated;
       });
+
+      // Deduct inventory batch_remaining for every purchased item
+      if (Array.isArray(orderData.items) && orderData.items.length > 0) {
+        const purchasedMap = {};
+        orderData.items.forEach((item) => {
+          const pId = item.product?.id || item.productId || item.id;
+          const qty = Math.max(1, Number(item.quantity || 1));
+          if (pId) {
+            purchasedMap[pId] = (purchasedMap[pId] || 0) + qty;
+          }
+        });
+
+        // 1. Update product catalog state
+        setProducts((prevProducts) => {
+          const updated = prevProducts.map((p) => {
+            const purchasedQty = purchasedMap[p.id];
+            if (purchasedQty) {
+              const curStock = typeof p.batchRemaining === 'number'
+                ? p.batchRemaining
+                : (typeof p.batch_remaining === 'number' ? p.batch_remaining : 3);
+              const newRemaining = Math.max(0, curStock - purchasedQty);
+              const isArchived = newRemaining === 0;
+              return {
+                ...p,
+                batchRemaining: newRemaining,
+                batch_remaining: newRemaining,
+                stockStatus: isArchived ? 'archived' : p.stockStatus,
+                stock_status: isArchived ? 'archived' : p.stock_status,
+              };
+            }
+            return p;
+          });
+
+          try {
+            localStorage.setItem('likha_catalog_items', JSON.stringify(updated));
+          } catch (e) {
+            console.warn('localStorage catalog save warning:', e);
+          }
+
+          return updated;
+        });
+
+        // 2. Update activeProduct displayed in 3D Hero if it was purchased
+        setActiveProduct((currentActive) => {
+          if (!currentActive) return currentActive;
+          const purchasedQty = purchasedMap[currentActive.id];
+          if (purchasedQty) {
+            const curStock = typeof currentActive.batchRemaining === 'number'
+              ? currentActive.batchRemaining
+              : (typeof currentActive.batch_remaining === 'number' ? currentActive.batch_remaining : 3);
+            const newRemaining = Math.max(0, curStock - purchasedQty);
+            const isArchived = newRemaining === 0;
+            return {
+              ...currentActive,
+              batchRemaining: newRemaining,
+              batch_remaining: newRemaining,
+              stockStatus: isArchived ? 'archived' : currentActive.stockStatus,
+              stock_status: isArchived ? 'archived' : currentActive.stock_status,
+            };
+          }
+          return currentActive;
+        });
+      }
     }
   };
 
@@ -386,11 +500,11 @@ export function App() {
       <main className="pt-28 sm:pt-32">
         
         {/* 3D Flagship Hero Stage */}
-        <section id="stage" className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+        <section id="stage" className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 py-4 sm:py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 xl:gap-14 items-center">
             
             {/* Left 3D Viewport (7 Cols on desktop) */}
-            <div className="lg:col-span-7 w-full">
+            <div className="lg:col-span-7 xl:col-span-7 w-full">
               <Stage3D
                 product={activeProduct}
                 selectedMaterial={selectedMaterial}
@@ -400,7 +514,7 @@ export function App() {
             </div>
 
             {/* Right Product Specs & Customizer (5 Cols on desktop) */}
-            <div className="lg:col-span-5 w-full">
+            <div className="lg:col-span-5 xl:col-span-5 w-full">
               <ProductInfo
                 product={activeProduct}
                 selectedMaterial={selectedMaterial}
@@ -446,6 +560,7 @@ export function App() {
         onClose={() => setIsCartOpen(false)}
         items={cart}
         onRemoveItem={handleRemoveFromCart}
+        onUpdateQuantity={handleUpdateCartQuantity}
         onProceedToCheckout={handleProceedToCheckout}
         activeCurrency={activeCurrency}
       />

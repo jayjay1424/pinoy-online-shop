@@ -350,7 +350,7 @@ export function Stage3D({
       className={`relative w-full rounded-3xl overflow-hidden glass-panel border border-[#5C3A21]/15 shadow-warm select-none transition-all duration-500 ${
         isFullscreen
           ? 'fixed inset-4 z-50 h-[calc(100vh-2rem)] rounded-3xl shadow-warm-lg'
-          : 'h-[460px] sm:h-[540px] lg:h-[620px]'
+          : 'h-[480px] sm:h-[560px] lg:h-[660px] xl:h-[720px]'
       }`}
     >
       {/* Hidden File Input for External .GLB / .GLTF Import */}

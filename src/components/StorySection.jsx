@@ -38,7 +38,7 @@ export function StorySection() {
   ];
 
   return (
-    <section id="story" className="max-w-7xl mx-auto px-4 sm:px-8 py-24 border-t border-[#5C3A21]/15">
+    <section id="story" className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 py-24 border-t border-[#5C3A21]/15">
       
       {/* Editorial Story Header */}
       <div className="max-w-3xl mx-auto text-center mb-16">

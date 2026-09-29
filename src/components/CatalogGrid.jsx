@@ -53,7 +53,7 @@ export function CatalogGrid({
   }, [products, activeCategory, searchQuery, sortBy]);
 
   return (
-    <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-8 py-16">
+    <section id="catalog" className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12 py-16">
       
       {/* Section Header */}
       <div className="text-center max-w-2xl mx-auto mb-10">
@@ -156,11 +156,15 @@ export function CatalogGrid({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8">
           {processedProducts.map((p) => {
             const rawPrice = Number(p.pricePHP ?? p.price_php ?? (p.price && p.price.PHP) ?? 45000);
             const convertedPrice = Math.round(rawPrice * rateInfo.rate);
             const monthlyInst = Math.round(convertedPrice / 12);
+            const curStock = typeof p.batchRemaining === 'number'
+              ? p.batchRemaining
+              : (typeof p.batch_remaining === 'number' ? p.batch_remaining : 3);
+            const isOutOfStock = curStock <= 0 || p.stockStatus === 'archived' || p.stock_status === 'archived';
 
             return (
               <div
@@ -173,14 +177,23 @@ export function CatalogGrid({
                     <span className="px-3 py-1 rounded-full text-[9px] uppercase tracking-widest font-bold bg-[#F2ECE4] text-[#5C3A21] border border-[#5C3A21]/10">
                       {p.collection}
                     </span>
-                    {p.has3DModel ? (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-300/60 shadow-2xs">
-                        <Sparkles className="w-3 h-3 text-[#C4975D]" />
-                        3D Interactive
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-[#8C5A3C] font-serif italic">Bespoke Harvest</span>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {isOutOfStock ? (
+                        <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                          Sold Out
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-amber-900 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300/60 font-semibold">
+                          {curStock} left
+                        </span>
+                      )}
+                      {p.has3DModel && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-300/60 shadow-2xs">
+                          <Sparkles className="w-3 h-3 text-[#C4975D]" />
+                          3D
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Visual Image Asset (PNG / JPG preview) or Luxury Embossed Fallback */}
@@ -254,20 +267,20 @@ export function CatalogGrid({
                     )}
 
                     <button
-                      disabled={p.stockStatus === 'archived' || p.batchRemaining === 0}
+                      disabled={isOutOfStock}
                       onClick={() => {
                         sound.playWoodThud();
                         onQuickAddToCart(p, convertedPrice, activeCurrency);
                       }}
                       className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all shadow-xs ${
-                        p.stockStatus === 'archived' || p.batchRemaining === 0
+                        isOutOfStock
                           ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
                           : 'bg-[#24140E] text-[#FAF8F5] hover:bg-[#341E15] border border-[#C4975D]/40 active:scale-95'
                       }`}
                     >
                       <ShoppingBag className="w-3.5 h-3.5 text-[#C4975D]" />
                       <span>
-                        {p.stockStatus === 'archived' || p.batchRemaining === 0
+                        {isOutOfStock
                           ? 'Sold Out'
                           : p.stockStatus === 'commission'
                           ? 'Commission'

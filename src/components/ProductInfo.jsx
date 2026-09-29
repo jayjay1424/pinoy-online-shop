@@ -18,16 +18,29 @@ export function ProductInfo({
   const [selectedEmbroidery, setSelectedEmbroidery] = useState('Alon ng Dagat');
   const [addedAnimation, setAddedAnimation] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+
+  // Reset quantity to 1 when active product switches
+  useEffect(() => {
+    setQuantity(1);
+  }, [product.id]);
+
+  const availableStock = typeof product.batchRemaining === 'number'
+    ? product.batchRemaining
+    : (typeof product.batch_remaining === 'number' ? product.batch_remaining : 3);
+  const isSoldOut = availableStock <= 0 || product.stockStatus === 'archived' || product.stock_status === 'archived';
 
   const rateInfo = CURRENCY_RATES[activeCurrency] || CURRENCY_RATES.PHP;
   const rawPrice = Number(product.pricePHP ?? product.price_php ?? (product.price && product.price.PHP) ?? 45000);
   const convertedPrice = Math.round(rawPrice * rateInfo.rate);
-  const formattedPrice = `${rateInfo.symbol} ${convertedPrice.toLocaleString()}`;
+  const totalPrice = convertedPrice * quantity;
+  const formattedPrice = `${rateInfo.symbol} ${totalPrice.toLocaleString()}`;
 
   // 12-month 0% installment calculation
   const monthly12 = Math.round(convertedPrice / 12);
 
   const handleAdd = () => {
+    if (isSoldOut) return;
     sound.playWoodThud();
     setAddedAnimation(true);
     onAddToCart({
@@ -35,7 +48,9 @@ export function ProductInfo({
       selectedMaterial,
       monogram,
       embroideryMotif: product.modelType === 'barong' ? selectedEmbroidery : null,
-      price: convertedPrice,
+      unitPrice: convertedPrice,
+      quantity,
+      price: totalPrice,
       currency: activeCurrency,
     });
     setTimeout(() => setAddedAnimation(false), 1400);
@@ -68,10 +83,17 @@ export function ProductInfo({
         <span className="text-2xl sm:text-3xl font-semibold text-[#24140E] tracking-tight">
           {formattedPrice}
         </span>
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-300/60 shadow-2xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-          Only {product.batchRemaining || 3} left in this harvest
-        </span>
+        {isSoldOut ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-800 border border-rose-300/60 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            Harvest Depleted • Sold Out
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-300/60 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            Only {availableStock} left in this harvest
+          </span>
+        )}
       </div>
 
       {/* 0% Luxury Installment Widget */}
@@ -202,17 +224,61 @@ export function ProductInfo({
         </div>
       )}
 
+      {/* Quantity Stepper (Bounded by available harvest stock) */}
+      {!isSoldOut && (
+        <div className="flex items-center gap-3 mb-4 p-2.5 rounded-2xl bg-[#F2ECE4]/70 border border-[#5C3A21]/15 w-fit">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#24140E] pl-1">
+            Quantity:
+          </span>
+          <div className="flex items-center bg-white rounded-xl border border-[#5C3A21]/20 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                sound.playBrassClick();
+                setQuantity((q) => Math.max(1, q - 1));
+              }}
+              disabled={quantity <= 1}
+              className="w-8 h-8 flex items-center justify-center text-[#5C3A21] hover:bg-[#FAF8F5] disabled:opacity-30 disabled:cursor-not-allowed rounded-l-xl font-bold transition-colors"
+            >
+              −
+            </button>
+            <span className="w-8 text-center text-xs font-mono font-bold text-[#24140E]">
+              {quantity}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                sound.playBrassClick();
+                setQuantity((q) => Math.min(availableStock, q + 1));
+              }}
+              disabled={quantity >= availableStock}
+              className="w-8 h-8 flex items-center justify-center text-[#5C3A21] hover:bg-[#FAF8F5] disabled:opacity-30 disabled:cursor-not-allowed rounded-r-xl font-bold transition-colors"
+            >
+              +
+            </button>
+          </div>
+          <span className="text-[10px] text-[#8C5A3C] font-mono font-semibold">
+            {availableStock} available
+          </span>
+        </div>
+      )}
+
       {/* Primary Actions: Acquire Piece, Concierge, & Wishlist */}
       <div className="flex items-center gap-2.5 mb-6">
         <button
           onClick={handleAdd}
-          className={`flex-1 py-3.5 px-6 rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 shadow-warm hover:shadow-warm-lg active:scale-98 animate-shimmer ${
-            addedAnimation
-              ? 'bg-[#8C5A3C] text-white scale-98'
-              : 'bg-[#24140E] text-[#FAF8F5] hover:bg-[#341E15] border border-[#C4975D]/40'
+          disabled={isSoldOut}
+          className={`flex-1 py-3.5 px-6 rounded-full font-bold text-xs sm:text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 shadow-warm hover:shadow-warm-lg active:scale-98 ${
+            isSoldOut
+              ? 'bg-stone-300 text-stone-500 border border-stone-400/40 cursor-not-allowed'
+              : addedAnimation
+              ? 'bg-[#8C5A3C] text-white scale-98 animate-shimmer'
+              : 'bg-[#24140E] text-[#FAF8F5] hover:bg-[#341E15] border border-[#C4975D]/40 animate-shimmer'
           }`}
         >
-          {addedAnimation ? (
+          {isSoldOut ? (
+            <span>Sold Out — Closed Harvest</span>
+          ) : addedAnimation ? (
             <>
               <Check className="w-4 h-4 text-[#C4975D]" />
               <span>Added to Atelier Bag (15m Lock Active)</span>
