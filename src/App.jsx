@@ -113,15 +113,28 @@ export function App() {
   }, []);
 
   // Dynamic catalog state with localStorage persistence, persistent inventory tracking, and API sync
+  // Helper: merge stored/API products ON TOP of base PRODUCTS so code-defined fields
+  // (cameraPresets, specs, materials) are never lost when localStorage/API data is stale.
+  const mergeWithBase = (storedList) => {
+    const storedMap = new Map(storedList.map((p) => [p.id, p]));
+    return PRODUCTS.map((base) => {
+      const stored = storedMap.get(base.id);
+      if (!stored) return base; // new product added to code, not in storage yet
+      // Spread base first so code fields are defaults, then overwrite with stored user/admin edits
+      return { ...base, ...stored, cameraPresets: base.cameraPresets };
+    }).concat(
+      // Admin-created products (not in PRODUCTS) come through as-is
+      storedList.filter((p) => !PRODUCTS.find((b) => b.id === p.id))
+    );
+  };
+
   const [products, setProducts] = useState(() => {
     try {
       const stored = localStorage.getItem('likha_catalog_items');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const existingIds = new Set(parsed.map((x) => x.id));
-          const missingFromCode = PRODUCTS.filter((p) => !existingIds.has(p.id));
-          const combined = [...parsed, ...missingFromCode];
+          const combined = mergeWithBase(parsed);
           return mergeProductsWithInventory(combined.map(normalizeProduct));
         }
       }
@@ -137,7 +150,7 @@ export function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const merged = mergeProductsWithInventory(parsed.map(normalizeProduct));
+          const merged = mergeProductsWithInventory(mergeWithBase(parsed).map(normalizeProduct));
           return merged[0];
         }
       }
@@ -183,9 +196,9 @@ export function App() {
         const data = await res.json();
         const prods = data?.products || data?.data;
         if (data && data.success && Array.isArray(prods) && prods.length > 0) {
-          const normalizedList = prods.map(normalizeProduct);
-          // Protect purchased stock from being overwritten by stateless server responses
-          const syncedList = mergeProductsWithInventory(normalizedList);
+          // Protect cameraPresets + other code-defined fields, then protect inventory stock
+          const withBase = mergeWithBase(prods.map(normalizeProduct));
+          const syncedList = mergeProductsWithInventory(withBase);
 
           setProducts(syncedList);
           setActiveProduct((prevActive) => {

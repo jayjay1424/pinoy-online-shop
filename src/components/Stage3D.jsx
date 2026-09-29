@@ -37,24 +37,7 @@ export function Stage3D({
 
     loadCurrentModel(sm, product, selectedMaterial, monogram);
 
-    // Fix: canvas size won't match CSS height until layout resolves.
-    // Use ResizeObserver so the renderer resizes whenever the container changes.
-    let ro;
-    if (typeof ResizeObserver !== 'undefined') {
-      ro = new ResizeObserver(() => {
-        if (sceneManagerRef.current) sceneManagerRef.current.onResize();
-      });
-      ro.observe(mountRef.current);
-    }
-
-    // Also call onResize one frame after mount so initial CSS height is applied
-    const raf = requestAnimationFrame(() => {
-      if (sceneManagerRef.current) sceneManagerRef.current.onResize();
-    });
-
     return () => {
-      cancelAnimationFrame(raf);
-      if (ro) ro.disconnect();
       sm.destroy();
       sceneManagerRef.current = null;
     };
